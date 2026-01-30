@@ -73,7 +73,7 @@ services:
       - /dev/net/tun:/dev/net/tun
     volumes:
       - ./config/ue.conf:/etc/srsran/ue.conf
-    entrypoint: /bin/bash -c "sleep 2 && srsue /etc/srsran/ue.conf"
+    entrypoint: /bin/bash -c "sleep 2 && /opt/srsran/ue_entrypoint.sh /etc/srsran/ue.conf"
     depends_on:
       - srsenb-1
     networks:
@@ -93,7 +93,7 @@ services:
       - /dev/net/tun:/dev/net/tun
     volumes:
       - ./config/ue2.conf:/etc/srsran/ue.conf
-    entrypoint: /bin/bash -c "sleep 2 && srsue /etc/srsran/ue.conf"
+    entrypoint: /bin/bash -c "sleep 2 && /opt/srsran/ue_entrypoint.sh /etc/srsran/ue.conf"
     depends_on:
       - srsenb-2
     networks:
