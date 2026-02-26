@@ -65,7 +65,7 @@ services:
     build:
       context: .
       dockerfile: build/srsRAN4G/Dockerfile
-    container_name: UE
+    container_name: UE-1
     privileged: true
     cap_add:
       - NET_ADMIN
@@ -79,6 +79,26 @@ services:
     networks:
       rf_zmq:
         ipv4_address: ${UE_RF_IP}
+
+  # --- UE #2 ---
+  srsue-2:
+    build:
+      context: .
+      dockerfile: build/srsRAN4G/Dockerfile
+    container_name: UE-2
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./config/ue2.conf:/etc/srsran/ue.conf
+    entrypoint: /bin/bash -c "sleep 2 && srsue /etc/srsran/ue.conf"
+    depends_on:
+      - srsenb-2
+    networks:
+      rf_zmq:
+        ipv4_address: ${UE2_RF_IP}
 
 networks:
   backhaul: # S1-MME, S1-U, X2-C, X2-U
