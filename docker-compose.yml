@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # --- CORE NETWORK ---
+  srsepc:
+    build:
+      context: .
+      dockerfile: build/srsRAN4G/Dockerfile
+    container_name: EPC
+    privileged: true
+    expose:
+      - "36412/sctp"
+    volumes:
+      - ./config/epc.conf:/etc/srsran/epc.conf
+      - ./config/user_db.csv:/etc/srsran/user_db.csv
+    entrypoint: /opt/srsran/epc_entrypoint.sh
+    networks:
+      backhaul:
+        ipv4_address: ${EPC_IP}
+
+  # --- eNodeB #1 ---
+  srsenb-1:
+    build: 
+      context: .
+      dockerfile: build/srsRAN4G/Dockerfile
+    container_name: ENB-1
+    privileged: true
+    volumes:
+      - ./config/enb1.conf:/etc/srsran/enb.conf
+      - ./config/enb1_rr.conf:/etc/srsran/rr.conf
+      - ./config/enb1_sib.conf:/etc/srsran/sib.conf
+      - ./config/enb1_rb.conf:/etc/srsran/rb.conf
+    command: srsenb /etc/srsran/enb.conf
+    depends_on:
+      - srsepc
+    networks:
+      backhaul:
+        ipv4_address: ${ENB1_IP}
+      rf_zmq:
+        ipv4_address: ${ENB1_RF_IP}
+
+  # --- eNodeB #2 ---
+  srsenb-2:
+    build:
+      context: .
+      dockerfile: build/srsRAN4G/Dockerfile
+    container_name: ENB-2
+    privileged: true
+    volumes:
+      - ./config/enb2.conf:/etc/srsran/enb.conf
+      - ./config/enb2_rr.conf:/etc/srsran/rr.conf
+      - ./config/enb2_sib.conf:/etc/srsran/sib.conf
+      - ./config/enb2_rb.conf:/etc/srsran/rb.conf
+    command: srsenb /etc/srsran/enb.conf
+    depends_on:
+      - srsepc
+    networks:
+      backhaul:
+        ipv4_address: ${ENB2_IP}
+      rf_zmq:
+        ipv4_address: ${ENB2_RF_IP}
+
+  # --- UE #1 ---
+  srsue:
+    build:
+      context: .
+      dockerfile: build/srsRAN4G/Dockerfile
+    container_name: UE
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    volumes:
+      - ./config/ue.conf:/etc/srsran/ue.conf
+    entrypoint: /bin/bash -c "sleep 2 && srsue /etc/srsran/ue.conf"
+    depends_on:
+      - srsenb-1
+    networks:
+      rf_zmq:
+        ipv4_address: ${UE_RF_IP}
+
+networks:
+  backhaul: # S1-MME, S1-U, X2-C, X2-U
+    ipam:
+      config:
+        - subnet: 10.10.1.0/24
+  rf_zmq:
+    ipam:
+      config:
+        - subnet: 10.11.1.0/24
