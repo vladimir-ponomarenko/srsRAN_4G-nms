@@ -30,6 +30,7 @@ services:
       - ./config/enb1_rr.conf:/etc/srsran/rr.conf
       - ./config/enb1_sib.conf:/etc/srsran/sib.conf
       - ./config/enb1_rb.conf:/etc/srsran/rb.conf
+      - enb1_metrics:/var/run/enb-metrics
     command: srsenb /etc/srsran/enb.conf
     depends_on:
       - srsepc
@@ -51,6 +52,7 @@ services:
       - ./config/enb2_rr.conf:/etc/srsran/rr.conf
       - ./config/enb2_sib.conf:/etc/srsran/sib.conf
       - ./config/enb2_rb.conf:/etc/srsran/rb.conf
+      - enb2_metrics:/var/run/enb-metrics
     command: srsenb /etc/srsran/enb.conf
     depends_on:
       - srsepc
@@ -100,6 +102,32 @@ services:
       rf_zmq:
         ipv4_address: ${UE2_RF_IP}
 
+  # --- EMS Agent (ENB-1) ---
+  ems-enb1:
+    build:
+      context: .
+      dockerfile: build/ems-agent/Dockerfile
+    container_name: EMS-ENB-1
+    depends_on:
+      - srsenb-1
+    environment:
+      - SOCKET_PATH=/var/run/enb-metrics/enb1_metrics.uds
+    volumes:
+      - enb1_metrics:/var/run/enb-metrics
+
+  # --- EMS Agent (ENB-2) ---
+  ems-enb2:
+    build:
+      context: .
+      dockerfile: build/ems-agent/Dockerfile
+    container_name: EMS-ENB-2
+    depends_on:
+      - srsenb-2
+    environment:
+      - SOCKET_PATH=/var/run/enb-metrics/enb2_metrics.uds
+    volumes:
+      - enb2_metrics:/var/run/enb-metrics
+
 networks:
   backhaul: # S1-MME, S1-U, X2-C, X2-U
     ipam:
@@ -109,3 +137,7 @@ networks:
     ipam:
       config:
         - subnet: 10.11.1.0/24
+
+volumes:
+  enb1_metrics:
+  enb2_metrics:
