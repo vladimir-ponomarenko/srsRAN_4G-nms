@@ -1,10 +1,10 @@
 include .env
 export
 
-.PHONY: help build up down restart ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 net-check
+.PHONY: help build up down restart ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 net-check iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul
 
 help:
-	@echo "Usage: make [build|up|down|restart|ue1-shell|ue2-shell|enb1-shell|enb2-shell|epc-shell|ems1-shell|ems2-shell|logs|logs-all|logs-epc|logs-enb1|logs-enb2|logs-ue1|logs-ue2|logs-ems1|logs-ems2|net-check]"
+	@echo "Usage: make [build|up|down|restart|ue1-shell|ue2-shell|enb1-shell|enb2-shell|epc-shell|ems1-shell|ems2-shell|logs|logs-all|logs-epc|logs-enb1|logs-enb2|logs-ue1|logs-ue2|logs-ems1|logs-ems2|net-check|iperf-epc-server|iperf-ue1-server|iperf-ue2-server|iperf-ue1-dl|iperf-ue1-ul|iperf-ue2-dl|iperf-ue2-ul]"
 
 build:
 	docker compose build
@@ -67,3 +67,15 @@ logs-ems2:
 
 net-check:
 	bash build/scripts/check_ue_internet.sh
+
+iperf-ue1-dl:
+	bash build/scripts/iperf_ue.sh UE-1 dl
+
+iperf-ue1-ul:
+	bash build/scripts/iperf_ue.sh UE-1 ul
+
+iperf-ue2-dl:
+	bash build/scripts/iperf_ue.sh UE-2 dl
+
+iperf-ue2-ul:
+	bash build/scripts/iperf_ue.sh UE-2 ul

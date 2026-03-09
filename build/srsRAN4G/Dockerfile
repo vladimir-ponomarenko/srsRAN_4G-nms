@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y \
     libconfig++9v5 \
     libsctp1 \
     libzmq5 \
+    iperf3 \
     iproute2 \
     iptables \
     iputils-ping \
