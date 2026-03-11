@@ -2,3 +2,6 @@
 	path = externals/srsRAN_4G
 	url = https://github.com/vladimir-ponomarenko/srsRAN_4G
 	branch = nms
+[submodule "externals/lte-element-manager"]
+	path = externals/lte-element-manager
+	url = https://github.com/vladimir-ponomarenko/lte-element-manager
