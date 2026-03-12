@@ -1,0 +1,4 @@
+[submodule "externals/srsRAN_4G"]
+	path = externals/srsRAN_4G
+	url = https://github.com/vladimir-ponomarenko/srsRAN_4G
+	branch = nms

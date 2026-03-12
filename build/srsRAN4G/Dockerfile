@@ -4,18 +4,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y \
     cmake \
-    git \
     build-essential \
     libfftw3-dev \
     libmbedtls-dev \
     libboost-program-options-dev \
     libconfig++-dev \
     libsctp-dev \
-    libzmq3-dev \
-    curl
+    libzmq3-dev
 
 WORKDIR /src
-RUN git clone https://github.com/vladimir-ponomarenko/srsRAN_4G.git .
+COPY externals/srsRAN_4G/ /src/
 
 WORKDIR /src/build
 RUN cmake ../ && make -j$(nproc) && make install
