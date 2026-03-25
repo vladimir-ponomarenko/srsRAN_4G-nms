@@ -11,8 +11,8 @@ services:
     expose:
       - "36412/sctp"
     volumes:
-      - ./config/epc.conf:/etc/srsran/epc.conf
-      - ./config/user_db.csv:/etc/srsran/user_db.csv
+      - ./config/srsRAN4G/epc.conf:/etc/srsran/epc.conf
+      - ./config/srsRAN4G/user_db.csv:/etc/srsran/user_db.csv
     entrypoint: /opt/srsran/epc_entrypoint.sh
     networks:
       backhaul:
@@ -26,10 +26,10 @@ services:
     container_name: ENB-1
     privileged: true
     volumes:
-      - ./config/enb1.conf:/etc/srsran/enb.conf
-      - ./config/enb1_rr.conf:/etc/srsran/rr.conf
-      - ./config/enb1_sib.conf:/etc/srsran/sib.conf
-      - ./config/enb1_rb.conf:/etc/srsran/rb.conf
+      - ./config/srsRAN4G/enb1.conf:/etc/srsran/enb.conf
+      - ./config/srsRAN4G/enb1_rr.conf:/etc/srsran/rr.conf
+      - ./config/srsRAN4G/enb1_sib.conf:/etc/srsran/sib.conf
+      - ./config/srsRAN4G/enb1_rb.conf:/etc/srsran/rb.conf
       - enb1_metrics:/var/run/enb-metrics
     command: srsenb /etc/srsran/enb.conf
     depends_on:
@@ -48,10 +48,10 @@ services:
     container_name: ENB-2
     privileged: true
     volumes:
-      - ./config/enb2.conf:/etc/srsran/enb.conf
-      - ./config/enb2_rr.conf:/etc/srsran/rr.conf
-      - ./config/enb2_sib.conf:/etc/srsran/sib.conf
-      - ./config/enb2_rb.conf:/etc/srsran/rb.conf
+      - ./config/srsRAN4G/enb2.conf:/etc/srsran/enb.conf
+      - ./config/srsRAN4G/enb2_rr.conf:/etc/srsran/rr.conf
+      - ./config/srsRAN4G/enb2_sib.conf:/etc/srsran/sib.conf
+      - ./config/srsRAN4G/enb2_rb.conf:/etc/srsran/rb.conf
       - enb2_metrics:/var/run/enb-metrics
     command: srsenb /etc/srsran/enb.conf
     depends_on:
@@ -74,7 +74,7 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - ./config/ue.conf:/etc/srsran/ue.conf
+      - ./config/srsRAN4G/ue.conf:/etc/srsran/ue.conf
     entrypoint: /bin/bash -c "sleep 2 && /opt/srsran/ue_entrypoint.sh /etc/srsran/ue.conf"
     depends_on:
       - srsenb-1
@@ -94,7 +94,7 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     volumes:
-      - ./config/ue2.conf:/etc/srsran/ue.conf
+      - ./config/srsRAN4G/ue2.conf:/etc/srsran/ue.conf
     entrypoint: /bin/bash -c "sleep 2 && /opt/srsran/ue_entrypoint.sh /etc/srsran/ue.conf"
     depends_on:
       - srsenb-2
@@ -111,9 +111,13 @@ services:
     depends_on:
       - srsenb-1
     environment:
-      - SOCKET_PATH=/var/run/enb-metrics/enb1_metrics.uds
+      - TERM=xterm-256color
+      - EMS_CONFIG=/app/config/enb1.yaml
     volumes:
+      - ./config/ems-agent/enb1.yaml:/app/config/enb1.yaml:ro
       - enb1_metrics:/var/run/enb-metrics
+    tty: true
+    stdin_open: true
 
   # --- EMS Agent (ENB-2) ---
   ems-enb2:
@@ -124,9 +128,13 @@ services:
     depends_on:
       - srsenb-2
     environment:
-      - SOCKET_PATH=/var/run/enb-metrics/enb2_metrics.uds
+      - TERM=xterm-256color
+      - EMS_CONFIG=/app/config/enb2.yaml
     volumes:
+      - ./config/ems-agent/enb2.yaml:/app/config/enb2.yaml:ro
       - enb2_metrics:/var/run/enb-metrics
+    tty: true
+    stdin_open: true
 
 networks:
   backhaul: # S1-MME, S1-U, X2-C, X2-U

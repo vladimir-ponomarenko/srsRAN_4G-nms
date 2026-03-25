@@ -5,7 +5,7 @@ WORKDIR /src
 COPY externals/lte-element-manager/ /src/
 
 ENV CGO_ENABLED=0
-RUN go build -o /out/ems-agent ./test.go
+RUN go build -o /out/ems-agent ./cmd/ems-agent
 
 # --- Stage 2: Runtime ---
 FROM alpine:3.19
@@ -17,5 +17,4 @@ RUN mkdir -p /var/run/enb-metrics \
 
 COPY --from=builder /out/ems-agent /app/ems-agent
 
-ENV SOCKET_PATH=/tmp/enb_metrics.uds
 ENTRYPOINT ["/app/ems-agent"]
