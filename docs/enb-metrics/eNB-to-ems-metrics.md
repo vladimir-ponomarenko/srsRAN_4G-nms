@@ -508,3 +508,12 @@ Source types and counters live in:
   ]
 }
 ```
+
+## NETCONF encoding note
+
+For NETCONF payloads we follow RFC7951 encoding rules. That means any `uint64`
+fields are serialized as strings in the NETCONF snapshot (even though the raw
+UDS JSON contains numeric values). This applies to:
+
+- `s1ap_container.nas_*` counters
+- `bearer_container.dl_total_bytes`, `bearer_container.ul_total_bytes`

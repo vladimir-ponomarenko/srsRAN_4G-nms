@@ -8,6 +8,12 @@ bus:
   # Internal bus buffer size.
   buffer: 200
 
+metrics:
+  # Path where the latest raw JSON metrics snapshot is stored.
+  snapshot_path: /var/run/enb-metrics/enb2_metrics.json
+  # Log raw UDS metrics as received.
+  log_uds_metrics: false
+
 log:
   # Default log level for all components.
   level: info
@@ -21,3 +27,15 @@ log:
   components:
     metrics: info
     adapter: info
+    netconf: info
+
+netconf:
+  enabled: true
+  addr: 0.0.0.0:8302
+  transport: ssh
+  snapshot_path: /var/run/enb-metrics/enb2_metrics.json
+  yang_dir: /app/yang
+  ssh:
+    hostkey: /app/netconf/hostkey
+    authorized_key: /app/netconf/authorized_keys
+    username: admin

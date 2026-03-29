@@ -116,6 +116,8 @@ services:
     volumes:
       - ./config/ems-agent/enb1.yaml:/app/config/enb1.yaml:ro
       - enb1_metrics:/var/run/enb-metrics
+    ports:
+      - "8301:8301"
     tty: true
     stdin_open: true
 
@@ -133,6 +135,8 @@ services:
     volumes:
       - ./config/ems-agent/enb2.yaml:/app/config/enb2.yaml:ro
       - enb2_metrics:/var/run/enb-metrics
+    ports:
+      - "8302:8302"
     tty: true
     stdin_open: true
 
