@@ -1,5 +1,27 @@
 # srsRAN 4G NMS
 
+## NMS Integration (NETCONF/YANG)
+
+NETCONF endpoints (published to host):
+
+- ENB-1 EMS: `127.0.0.1:8301`
+- ENB-2 EMS: `127.0.0.1:8302`
+
+Auth:
+
+- SSH user: `admin`
+- Keys are generated via `make netconf-keys` and exported to `netconf/keys` (not committed).
+
+NRM/PM polling examples:
+
+```bash
+make POLL_INTERVAL=2 netconf-poll-enb1-nrm
+make POLL_INTERVAL=2 netconf-poll-enb1-nrm-cells
+```
+
+Full details (ports, keys, XPath filters, vendor augmentation):
+
+- [docs/nms-integration.md](docs/nms-integration.md)
 
 ## Quick Start
 

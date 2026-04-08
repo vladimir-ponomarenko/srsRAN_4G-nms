@@ -25,9 +25,9 @@ log:
   timestamp: true
   # Optional per-component overrides.
   components:
-    metrics: info
-    adapter: info
-    netconf: info
+    metrics: debug
+    adapter: debug
+    netconf: debug
 
 netconf:
   enabled: true
@@ -39,3 +39,13 @@ netconf:
     hostkey: /app/netconf/hostkey
     authorized_key: /app/netconf/authorized_keys
     username: admin
+
+nrm:
+  subnetwork: srsRAN
+  managed_element: enb1
+  enb_function_id: "1"
+
+pm:
+  enabled: false
+  granularity_period: 10s
+  report_period: 10s

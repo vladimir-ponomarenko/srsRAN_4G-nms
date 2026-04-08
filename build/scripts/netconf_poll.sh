@@ -9,6 +9,16 @@ rpc=${4:-"get"}
 client=${NETCONF_CLIENT:-externals/lte-element-manager/.build/libnetconf2/examples/client}
 priv_key=${NETCONF_PRIV_KEY:-externals/lte-element-manager/netconf/keys/client_key}
 pub_key=${NETCONF_PUB_KEY:-externals/lte-element-manager/netconf/keys/authorized_keys}
+known_hosts=${NETCONF_KNOWN_HOSTS:-netconf/known_hosts}
+known_hosts_mode=${NETCONF_KNOWN_HOSTS_MODE:-accept}
+
+nrmsn=${NETCONF_NRM_SUBNETWORK:-srsRAN}
+nrmme=${NETCONF_NRM_MANAGED_ELEMENT:-enb1}
+nrmfn=${NETCONF_NRM_ENB_FUNCTION_ID:-1}
+
+if [ ! -f "${priv_key}" ] || [ ! -f "${pub_key}" ]; then
+  build/scripts/netconf_keys.sh >/dev/null
+fi
 
 if [ ! -x "${client}" ]; then
   echo "netconf client not found: ${client}" >&2
@@ -42,10 +52,29 @@ if [ "${need_rebuild}" -eq 1 ]; then
 fi
 
 chmod 600 "${priv_key}" 2>/dev/null || true
+mkdir -p "$(dirname "${known_hosts}")"
+touch "${known_hosts}"
+export NETCONF_KNOWN_HOSTS="${known_hosts}"
+export NETCONF_KNOWN_HOSTS_MODE="${known_hosts_mode}"
 
 case "${rpc}" in
   "<get/>"|"get")
     rpc_cmd="get"
+    ;;
+  "get-nrm")
+    rpc_cmd="get"
+    # Use prefixless XPath so the libnetconf2 example client does not need custom YANG modules
+    # to validate prefixes locally.
+    rpc_xpath="/*[local-name()='SubNetwork'][*[local-name()='id']='${nrmsn}']"\
+"/*[local-name()='ManagedElement'][*[local-name()='id']='${nrmme}']"\
+"/*[local-name()='ENBFunction'][*[local-name()='id']='${nrmfn}']"
+    ;;
+  "get-nrm-cells")
+    rpc_cmd="get"
+    rpc_xpath="/*[local-name()='SubNetwork'][*[local-name()='id']='${nrmsn}']"\
+"/*[local-name()='ManagedElement'][*[local-name()='id']='${nrmme}']"\
+"/*[local-name()='ENBFunction'][*[local-name()='id']='${nrmfn}']"\
+"/*[local-name()='EUtranCell']"
     ;;
   "<get-config/>"|"get-config")
     rpc_cmd="get-config"
@@ -59,4 +88,8 @@ if [ "${host}" != "127.0.0.1" ] && [ "${host}" != "localhost" ]; then
   echo "warning: libnetconf2 example client ignores host, using built-in SSH_ADDRESS" >&2
 fi
 
-"${client}" -p "${port}" -P "${pub_key}" -i "${priv_key}" --loop --interval "${interval}" "${rpc_cmd}"
+if [ -n "${rpc_xpath:-}" ]; then
+  "${client}" -p "${port}" -P "${pub_key}" -i "${priv_key}" --loop --interval "${interval}" "${rpc_cmd}" "${rpc_xpath}"
+else
+  "${client}" -p "${port}" -P "${pub_key}" -i "${priv_key}" --loop --interval "${interval}" "${rpc_cmd}"
+fi

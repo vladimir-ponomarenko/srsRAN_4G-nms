@@ -1,7 +1,7 @@
 include .env
 export
 
-.PHONY: help build build-fast build-ems build-enb build-ems-fast build-enb-fast pull-images up down restart ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 net-check netconf-poll-enb1 netconf-poll-enb2 iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul
+.PHONY: help build build-fast build-ems build-enb build-ems-fast build-enb-fast pull-images up down restart ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 net-check netconf-keys netconf-poll-enb1 netconf-poll-enb2 netconf-poll-enb1-nrm netconf-poll-enb2-nrm netconf-poll-enb1-nrm-cells netconf-poll-enb2-nrm-cells iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul
 
 help:
 	@echo "Usage: make [build|up|down|restart|ue1-shell|ue2-shell|enb1-shell|enb2-shell|epc-shell|ems1-shell|ems2-shell|logs|logs-all|logs-epc|logs-enb1|logs-enb2|logs-ue1|logs-ue2|logs-ems1|logs-ems2|net-check|iperf-epc-server|iperf-ue1-server|iperf-ue2-server|iperf-ue1-dl|iperf-ue1-ul|iperf-ue2-dl|iperf-ue2-ul]"
@@ -88,11 +88,26 @@ logs-ems2:
 net-check:
 	bash build/scripts/check_ue_internet.sh
 
+netconf-keys:
+	bash build/scripts/netconf_keys.sh
+
 netconf-poll-enb1:
 	bash build/scripts/netconf_poll.sh 127.0.0.1 8301 $(POLL_INTERVAL) get
 
 netconf-poll-enb2:
 	bash build/scripts/netconf_poll.sh 127.0.0.1 8302 $(POLL_INTERVAL) get
+
+netconf-poll-enb1-nrm:
+	NETCONF_NRM_MANAGED_ELEMENT=enb1 bash build/scripts/netconf_poll.sh 127.0.0.1 8301 $(POLL_INTERVAL) get-nrm
+
+netconf-poll-enb2-nrm:
+	NETCONF_NRM_MANAGED_ELEMENT=enb2 bash build/scripts/netconf_poll.sh 127.0.0.1 8302 $(POLL_INTERVAL) get-nrm
+
+netconf-poll-enb1-nrm-cells:
+	NETCONF_NRM_MANAGED_ELEMENT=enb1 bash build/scripts/netconf_poll.sh 127.0.0.1 8301 $(POLL_INTERVAL) get-nrm-cells
+
+netconf-poll-enb2-nrm-cells:
+	NETCONF_NRM_MANAGED_ELEMENT=enb2 bash build/scripts/netconf_poll.sh 127.0.0.1 8302 $(POLL_INTERVAL) get-nrm-cells
 
 iperf-ue1-dl:
 	bash build/scripts/iperf_ue.sh UE-1 dl
