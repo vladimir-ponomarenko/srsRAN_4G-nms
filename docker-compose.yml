@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # --- CORE NETWORK ---
   srsepc:
@@ -32,6 +30,20 @@ services:
       - ./config/srsRAN4G/enb1_rb.conf:/etc/srsran/rb.conf
       - enb1_metrics:/var/run/enb-metrics
     command: srsenb /etc/srsran/enb.conf
+    restart: always
+    stop_signal: SIGINT
+    stop_grace_period: 40s
+    labels:
+      - radio.supervisor.role=primary
+      - radio.supervisor.enabled=true
+      - radio.supervisor.dependents=UE-1
+      - radio.supervisor.start_delay_sec=3
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x srsenb >/dev/null 2>&1"]
+      interval: 1s
+      timeout: 1s
+      retries: 2
+      start_period: 2s
     depends_on:
       - srsepc
     networks:
@@ -54,6 +66,20 @@ services:
       - ./config/srsRAN4G/enb2_rb.conf:/etc/srsran/rb.conf
       - enb2_metrics:/var/run/enb-metrics
     command: srsenb /etc/srsran/enb.conf
+    restart: always
+    stop_signal: SIGINT
+    stop_grace_period: 40s
+    labels:
+      - radio.supervisor.role=primary
+      - radio.supervisor.enabled=true
+      - radio.supervisor.dependents=UE-2
+      - radio.supervisor.start_delay_sec=3
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x srsenb >/dev/null 2>&1"]
+      interval: 1s
+      timeout: 1s
+      retries: 2
+      start_period: 2s
     depends_on:
       - srsepc
     networks:
@@ -75,9 +101,11 @@ services:
       - /dev/net/tun:/dev/net/tun
     volumes:
       - ./config/srsRAN4G/ue.conf:/etc/srsran/ue.conf
-    entrypoint: /bin/bash -c "sleep 2 && /opt/srsran/ue_entrypoint.sh /etc/srsran/ue.conf"
+    entrypoint: /bin/bash -c "ip link delete tun_srsue || true; sleep 2; /opt/srsran/ue_entrypoint.sh /etc/srsran/ue.conf"
     depends_on:
-      - srsenb-1
+      srsenb-1:
+        condition: service_healthy
+    restart: "no"
     networks:
       rf_zmq:
         ipv4_address: ${UE_RF_IP}
@@ -95,9 +123,11 @@ services:
       - /dev/net/tun:/dev/net/tun
     volumes:
       - ./config/srsRAN4G/ue2.conf:/etc/srsran/ue.conf
-    entrypoint: /bin/bash -c "sleep 2 && /opt/srsran/ue_entrypoint.sh /etc/srsran/ue.conf"
+    entrypoint: /bin/bash -c "ip link delete tun_srsue || true; sleep 2; /opt/srsran/ue_entrypoint.sh /etc/srsran/ue.conf"
     depends_on:
-      - srsenb-2
+      srsenb-2:
+        condition: service_healthy
+    restart: "no"
     networks:
       rf_zmq:
         ipv4_address: ${UE2_RF_IP}
@@ -115,9 +145,13 @@ services:
       - EMS_CONFIG=/app/config/enb1.yaml
     volumes:
       - ./config/ems-agent/enb1.yaml:/app/config/enb1.yaml:ro
+      - ./config/srsRAN4G/enb1.conf:/app/element-config/enb.conf
+      - ./config/srsRAN4G/enb1_rr.conf:/app/element-config/rr.conf
       - enb1_metrics:/var/run/enb-metrics
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8301:8301"
+      - "18081:18081"
     tty: true
     stdin_open: true
 
@@ -134,11 +168,27 @@ services:
       - EMS_CONFIG=/app/config/enb2.yaml
     volumes:
       - ./config/ems-agent/enb2.yaml:/app/config/enb2.yaml:ro
+      - ./config/srsRAN4G/enb2.conf:/app/element-config/enb.conf
+      - ./config/srsRAN4G/enb2_rr.conf:/app/element-config/rr.conf
       - enb2_metrics:/var/run/enb-metrics
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "8302:8302"
+      - "18082:18082"
     tty: true
     stdin_open: true
+
+  radio-supervisor:
+    image: docker:27-cli
+    container_name: RADIO-SUPERVISOR
+    environment:
+      - RADIO_PAIR_DELAY_SEC=3
+      - RADIO_HEALTH_TIMEOUT_SEC=20
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./build/scripts/radio_compose_supervisor.sh:/opt/radio_compose_supervisor.sh:ro
+    entrypoint: /bin/sh /opt/radio_compose_supervisor.sh
+    restart: always
 
 networks:
   backhaul: # S1-MME, S1-U, X2-C, X2-U

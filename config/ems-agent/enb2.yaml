@@ -49,3 +49,14 @@ pm:
   enabled: false
   granularity_period: 10s
   report_period: 10s
+
+control:
+  enabled: true
+  addr: 0.0.0.0:18082
+  restart:
+    docker_socket: /var/run/docker.sock
+    timeout: 20s
+    targets:
+      - container: ENB-2
+        enb_config_path: /app/element-config/enb.conf
+        rr_config_path: /app/element-config/rr.conf

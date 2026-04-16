@@ -6,56 +6,67 @@ port=${2:-8301}
 interval=${3:-1}
 rpc=${4:-"get"}
 
-client=${NETCONF_CLIENT:-externals/lte-element-manager/.build/libnetconf2/examples/client}
-priv_key=${NETCONF_PRIV_KEY:-externals/lte-element-manager/netconf/keys/client_key}
-pub_key=${NETCONF_PUB_KEY:-externals/lte-element-manager/netconf/keys/authorized_keys}
-known_hosts=${NETCONF_KNOWN_HOSTS:-netconf/known_hosts}
+client=${NETCONF_CLIENT:-}
+ems_container=${NETCONF_EMS_CONTAINER:-}
+
+if [ -n "${ems_container}" ]; then
+  priv_key=${NETCONF_PRIV_KEY:-/app/netconf/client_key}
+  pub_key=${NETCONF_PUB_KEY:-/app/netconf/client_key.pub}
+  known_hosts=${NETCONF_KNOWN_HOSTS:-/app/netconf/known_hosts}
+else
+  priv_key=${NETCONF_PRIV_KEY:-externals/lte-element-manager/netconf/keys/client_key}
+  pub_key=${NETCONF_PUB_KEY:-externals/lte-element-manager/netconf/keys/authorized_keys}
+  known_hosts=${NETCONF_KNOWN_HOSTS:-netconf/known_hosts}
+fi
 known_hosts_mode=${NETCONF_KNOWN_HOSTS_MODE:-accept}
 
 nrmsn=${NETCONF_NRM_SUBNETWORK:-srsRAN}
 nrmme=${NETCONF_NRM_MANAGED_ELEMENT:-enb1}
 nrmfn=${NETCONF_NRM_ENB_FUNCTION_ID:-1}
 
-if [ ! -f "${priv_key}" ] || [ ! -f "${pub_key}" ]; then
-  build/scripts/netconf_keys.sh >/dev/null
-fi
-
-if [ ! -x "${client}" ]; then
-  echo "netconf client not found: ${client}" >&2
-  exit 1
-fi
-
-build_dir="externals/lte-element-manager/.build/libnetconf2"
-src_client="externals/lte-element-manager/third_party/libnetconf2/examples/client.c"
-src_header="externals/lte-element-manager/third_party/libnetconf2/examples/example.h.in"
-
-need_rebuild=0
-if ! "${client}" --help 2>/dev/null | grep -q -- "--loop"; then
-  need_rebuild=1
-elif [ -f "${client}" ]; then
-  if [ -f "${src_client}" ] && [ "$(stat -c %Y "${src_client}")" -gt "$(stat -c %Y "${client}")" ]; then
-    need_rebuild=1
-  fi
-  if [ -f "${src_header}" ] && [ "$(stat -c %Y "${src_header}")" -gt "$(stat -c %Y "${client}")" ]; then
-    need_rebuild=1
+if [ -z "${ems_container}" ]; then
+  if [ ! -f "${priv_key}" ] || [ ! -f "${pub_key}" ]; then
+    build/scripts/netconf_keys.sh >/dev/null
   fi
 fi
 
-if [ "${need_rebuild}" -eq 1 ]; then
-  if [ -f "${build_dir}/CMakeCache.txt" ]; then
-    cmake --build "${build_dir}" --target client
+run_client() {
+  if [ -n "${ems_container}" ]; then
+    docker exec -i \
+      -e NETCONF_KNOWN_HOSTS="${known_hosts}" \
+      -e NETCONF_KNOWN_HOSTS_MODE="${known_hosts_mode}" \
+      "${ems_container}" /app/netconf-client "$@"
   else
-    echo "libnetconf2 build dir missing: ${build_dir}" >&2
-    echo "Run: make -C externals/lte-element-manager libnetconf2" >&2
+    "${client}" "$@"
+  fi
+}
+
+if [ -n "${ems_container}" ]; then
+  if ! docker ps --format '{{.Names}}' | grep -qx "${ems_container}"; then
+    echo "ems container not running: ${ems_container}" >&2
+    exit 1
+  fi
+  docker exec -i "${ems_container}" sh -c "touch \"${known_hosts}\"" >/dev/null 2>&1 || true
+else
+  if [ -z "${client}" ]; then
+    client="externals/lte-element-manager/.local/bin/netconf-client"
+  fi
+  if [ ! -x "${client}" ]; then
+    make -C externals/lte-element-manager netconf-client >/dev/null
+  fi
+  if [ ! -x "${client}" ]; then
+    echo "netconf client not found after build attempt: ${client}" >&2
     exit 1
   fi
 fi
 
-chmod 600 "${priv_key}" 2>/dev/null || true
-mkdir -p "$(dirname "${known_hosts}")"
-touch "${known_hosts}"
-export NETCONF_KNOWN_HOSTS="${known_hosts}"
-export NETCONF_KNOWN_HOSTS_MODE="${known_hosts_mode}"
+if [ -z "${ems_container}" ]; then
+  chmod 600 "${priv_key}" 2>/dev/null || true
+  mkdir -p "$(dirname "${known_hosts}")"
+  touch "${known_hosts}"
+  export NETCONF_KNOWN_HOSTS="${known_hosts}"
+  export NETCONF_KNOWN_HOSTS_MODE="${known_hosts_mode}"
+fi
 
 case "${rpc}" in
   "<get/>"|"get")
@@ -79,6 +90,14 @@ case "${rpc}" in
   "<get-config/>"|"get-config")
     rpc_cmd="get-config"
     ;;
+  "get-config-running")
+    rpc_cmd="get-config"
+    rpc_ds="running"
+    ;;
+  "get-config-candidate")
+    rpc_cmd="get-config"
+    rpc_ds="candidate"
+    ;;
   *)
     rpc_cmd="${rpc}"
     ;;
@@ -88,8 +107,19 @@ if [ "${host}" != "127.0.0.1" ] && [ "${host}" != "localhost" ]; then
   echo "warning: libnetconf2 example client ignores host, using built-in SSH_ADDRESS" >&2
 fi
 
-if [ -n "${rpc_xpath:-}" ]; then
-  "${client}" -p "${port}" -P "${pub_key}" -i "${priv_key}" --loop --interval "${interval}" "${rpc_cmd}" "${rpc_xpath}"
-else
-  "${client}" -p "${port}" -P "${pub_key}" -i "${priv_key}" --loop --interval "${interval}" "${rpc_cmd}"
-fi
+while true; do
+  if [ -n "${rpc_xpath:-}" ]; then
+    if [ -n "${rpc_ds:-}" ]; then
+      run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_ds}" "${rpc_xpath}"
+    else
+      run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_xpath}"
+    fi
+  else
+    if [ -n "${rpc_ds:-}" ]; then
+      run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_ds}"
+    else
+      run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}"
+    fi
+  fi
+  sleep "${interval}"
+done

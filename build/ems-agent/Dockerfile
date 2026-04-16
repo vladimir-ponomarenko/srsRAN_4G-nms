@@ -46,6 +46,8 @@ RUN --mount=type=cache,target=/tmp/libnetconf2-build \
 COPY externals/lte-element-manager/ /src/
 
 RUN cc -O2 -o /out/netconf-server ./cmd/netconf-server/server.c \
+    -I/usr/local/include -L/usr/local/lib -lnetconf2 -lyang -lssh -lssl -lcrypto -lcurl -lpthread
+RUN cc -O2 -o /out/netconf-client ./cmd/netconf-client/netconf-client.c \
     -I/usr/local/include -L/usr/local/lib -lnetconf2 -lyang -lssh -lssl -lcrypto -lpthread
 
 ENV CGO_ENABLED=0
@@ -71,6 +73,7 @@ RUN mkdir -p /var/run/enb-metrics \
 
 COPY --from=builder /out/ems-agent /app/ems-agent
 COPY --from=builder /out/netconf-server /app/netconf-server
+COPY --from=builder /out/netconf-client /app/netconf-client
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
 COPY --from=builder /usr/local/share/yang /usr/local/share/yang
 COPY --from=builder /src/yang /app/yang
