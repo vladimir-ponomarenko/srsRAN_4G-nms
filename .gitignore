@@ -1,4 +1,5 @@
 .DS_Store
 *.log
 netconf/keys/
+netconf/known_hosts
 .vscode/

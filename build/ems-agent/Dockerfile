@@ -65,6 +65,7 @@ RUN apk add --no-cache \
     curl \
     pcre2 \
     openssl \
+    openssh-keygen \
     libgcc \
     libstdc++
 
@@ -77,8 +78,14 @@ COPY --from=builder /out/netconf-client /app/netconf-client
 COPY --from=builder /usr/local/lib/ /usr/local/lib/
 COPY --from=builder /usr/local/share/yang /usr/local/share/yang
 COPY --from=builder /src/yang /app/yang
-COPY --from=builder /src/netconf/keys /app/netconf
-RUN chmod 600 /app/netconf/hostkey /app/netconf/client_key 2>/dev/null || true
+
+# Generate NETCONF SSH keys inside the image.
+RUN mkdir -p /app/netconf && \
+    ssh-keygen -t rsa -b 2048 -N "" -f /app/netconf/hostkey >/dev/null && \
+    ssh-keygen -t rsa -b 2048 -N "" -f /app/netconf/client_key >/dev/null && \
+    cp /app/netconf/client_key.pub /app/netconf/authorized_keys && \
+    chmod 600 /app/netconf/hostkey /app/netconf/client_key && \
+    chmod 644 /app/netconf/hostkey.pub /app/netconf/client_key.pub /app/netconf/authorized_keys
 
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
