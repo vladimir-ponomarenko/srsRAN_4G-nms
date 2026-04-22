@@ -81,8 +81,8 @@ COPY --from=builder /src/yang /app/yang
 
 # Generate NETCONF SSH keys inside the image.
 RUN mkdir -p /app/netconf && \
-    ssh-keygen -t rsa -b 2048 -N "" -f /app/netconf/hostkey >/dev/null && \
-    ssh-keygen -t rsa -b 2048 -N "" -f /app/netconf/client_key >/dev/null && \
+    ssh-keygen -m PEM -t rsa -b 2048 -N "" -f /app/netconf/hostkey >/dev/null && \
+    ssh-keygen -m PEM -t rsa -b 2048 -N "" -f /app/netconf/client_key >/dev/null && \
     cp /app/netconf/client_key.pub /app/netconf/authorized_keys && \
     chmod 600 /app/netconf/hostkey /app/netconf/client_key && \
     chmod 644 /app/netconf/hostkey.pub /app/netconf/client_key.pub /app/netconf/authorized_keys
