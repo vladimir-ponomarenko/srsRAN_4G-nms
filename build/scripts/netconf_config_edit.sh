@@ -81,14 +81,43 @@ trap cleanup EXIT
 
 leaf_xml=""
 case "${key}" in
-  mcc|mnc|n_prb)
+  enb_id|mcc|mnc|mme_addr|gtp_bind_addr|s1c_bind_addr|s1c_bind_port|n_prb|tm)
     leaf_xml="<cme:${key}>${value}</cme:${key}>"
     ;;
   dl_earfcn|pci)
     leaf_xml="<cme:EUtranCell><cme:id>${nrmcell}</cme:id><cme:${key}>${value}</cme:${key}></cme:EUtranCell>"
     ;;
+  cell_id|tac|ho_active|a3_offset|time_to_trigger|hysteresis)
+    leaf_xml="<cme:EUtranCell><cme:id>${nrmcell}</cme:id><cme:${key}>${value}</cme:${key}></cme:EUtranCell>"
+    ;;
   enb_serial|tx_gain)
     leaf_xml="<srs:${key}>${value}</srs:${key}>"
+    ;;
+  rx_gain|time_adv_nsamples|device_name|device_args)
+    leaf_xml="<srs:${key}>${value}</srs:${key}>"
+    ;;
+  sched_policy|pdsch_max_mcs|pusch_max_mcs|target_bler|min_nof_ctrl_symbols|max_nof_ctrl_symbols)
+    leaf_xml="<srs:scheduler><srs:${key}>${value}</srs:${key}></srs:scheduler>"
+    ;;
+  q_rx_lev_min|cell_barred|num_ra_preambles|preamble_init_rx_target_pwr|pwr_ramping_step|reference_signal_power|p0_nominal_pusch|p0_nominal_pucch|alpha|default_paging_cycle)
+    leaf_xml="<srs:sib><srs:${key}>${value}</srs:${key}></srs:sib>"
+    ;;
+  t300|t301|t310|n310|t311)
+    leaf_xml="<srs:sib><srs:ue_timers_and_constants><srs:${key}>${value}</srs:${key}></srs:ue_timers_and_constants></srs:sib>"
+    ;;
+  qci_profiles\\[*)
+    # key format: qci_profiles[7].discard_timer
+    if [[ "${key}" =~ ^qci_profiles\\[([0-9]+)\\]\\.([A-Za-z0-9_]+)$ ]]; then
+      qci="${BASH_REMATCH[1]}"
+      field="${BASH_REMATCH[2]}"
+      leaf_xml="<srs:qci_profiles><srs:qci>${qci}</srs:qci><srs:${field}>${value}</srs:${field}></srs:qci_profiles>"
+    else
+      echo "[netconf] unsupported key format: ${key}" >&2
+      exit 2
+    fi
+    ;;
+  pusch_max_its|nr_pusch_max_its|pusch_8bit_decoder|nof_phy_threads|metrics_period_secs|tx_amplitude|rrc_inactivity_timer|rlf_release_timer_ms|eea_pref_list|eia_pref_list|gtpu_tunnel_timeout|s1_setup_max_retries|s1_connect_timer|rx_gain_offset|use_cedron_f_est_alg|rlf_min_ul_snr_estim|max_mac_dl_kos|max_mac_ul_kos)
+    leaf_xml="<srs:expert><srs:${key}>${value}</srs:${key}></srs:expert>"
     ;;
   *)
     echo "[netconf] unsupported key: ${key}" >&2

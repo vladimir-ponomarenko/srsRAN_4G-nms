@@ -60,3 +60,5 @@ control:
       - container: ENB-2
         enb_config_path: /app/element-config/enb.conf
         rr_config_path: /app/element-config/rr.conf
+        sib_config_path: /app/element-config/sib.conf
+        rb_config_path: /app/element-config/rb.conf
