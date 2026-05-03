@@ -5,6 +5,7 @@ host=${1:-127.0.0.1}
 port=${2:-8301}
 interval=${3:-1}
 rpc=${4:-"get"}
+loop_forever=1
 
 client=${NETCONF_CLIENT:-}
 ems_container=${NETCONF_EMS_CONTAINER:-}
@@ -93,10 +94,51 @@ case "${rpc}" in
   "get-config-running")
     rpc_cmd="get-config"
     rpc_ds="running"
+    loop_forever=0
     ;;
   "get-config-candidate")
     rpc_cmd="get-config"
     rpc_ds="candidate"
+    loop_forever=0
+    ;;
+  "validate-running")
+    rpc_cmd="validate"
+    rpc_ds="running"
+    loop_forever=0
+    ;;
+  "validate-candidate")
+    rpc_cmd="validate"
+    rpc_ds="candidate"
+    loop_forever=0
+    ;;
+  "lock-running")
+    rpc_cmd="lock"
+    rpc_ds="running"
+    loop_forever=0
+    ;;
+  "lock-candidate")
+    rpc_cmd="lock"
+    rpc_ds="candidate"
+    loop_forever=0
+    ;;
+  "unlock-running")
+    rpc_cmd="unlock"
+    rpc_ds="running"
+    loop_forever=0
+    ;;
+  "unlock-candidate")
+    rpc_cmd="unlock"
+    rpc_ds="candidate"
+    loop_forever=0
+    ;;
+  "commit"|"discard-changes")
+    rpc_cmd="${rpc}"
+    loop_forever=0
+    ;;
+  "subscribe-alarms"|"subscribe")
+    rpc_cmd="subscribe"
+    rpc_duration="${NETCONF_SUBSCRIBE_SECONDS:-30}"
+    loop_forever=0
     ;;
   *)
     rpc_cmd="${rpc}"
@@ -104,7 +146,7 @@ case "${rpc}" in
 esac
 
 if [ "${host}" != "127.0.0.1" ] && [ "${host}" != "localhost" ]; then
-  echo "warning: libnetconf2 example client ignores host, using built-in SSH_ADDRESS" >&2
+  echo "warning: using remote NETCONF host ${host}:${port}" >&2
 fi
 
 while true; do
@@ -117,9 +159,14 @@ while true; do
   else
     if [ -n "${rpc_ds:-}" ]; then
       run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_ds}"
+    elif [ -n "${rpc_duration:-}" ]; then
+      run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_duration}"
     else
       run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}"
     fi
+  fi
+  if [ "${loop_forever}" -eq 0 ]; then
+    break
   fi
   sleep "${interval}"
 done

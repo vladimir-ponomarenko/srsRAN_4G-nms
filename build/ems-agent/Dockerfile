@@ -50,10 +50,10 @@ RUN cc -O2 -o /out/netconf-server ./cmd/netconf-server/server.c \
 RUN cc -O2 -o /out/netconf-client ./cmd/netconf-client/netconf-client.c \
     -I/usr/local/include -L/usr/local/lib -lnetconf2 -lyang -lssh -lssl -lcrypto -lpthread
 
-ENV CGO_ENABLED=0
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    go build -o /out/ems-agent ./cmd/ems-agent
+    PKG_CONFIG_PATH=/usr/local/lib/pkgconfig \
+    CGO_ENABLED=1 go build -tags netconf -o /out/ems-agent ./cmd/ems-agent
 
 # --- Stage 2: Runtime ---
 FROM alpine:3.19

@@ -5,11 +5,12 @@ host=${1:-127.0.0.1}
 port=${2:-8301}
 key=${3:-n_prb}
 value=${4:-}
-do_commit=${5:-commit}
+action=${5:-commit}
 commit_timeout_ms=${NETCONF_COMMIT_TIMEOUT_MS:-120000}
+validate_after_edit=${NETCONF_VALIDATE_AFTER_EDIT:-1}
 
 if [[ -z "${value}" ]]; then
-  echo "usage: $0 <host> <port> <key> <value> [commit|no-commit]" >&2
+  echo "usage: $0 <host> <port> <key> <value> [commit|no-commit|discard]" >&2
   exit 2
 fi
 
@@ -76,7 +77,21 @@ if [[ -z "${ems_container}" ]]; then
 fi
 
 tmp="$(mktemp -t netconf-edit.XXXXXX.xml)"
-cleanup() { rm -f "${tmp}"; }
+
+run_client_stdin() {
+  if [[ -n "${ems_container}" ]]; then
+    docker exec -i \
+      -e NETCONF_KNOWN_HOSTS="${known_hosts}" \
+      -e NETCONF_KNOWN_HOSTS_MODE="${known_hosts_mode}" \
+      "${ems_container}" /app/netconf-client "$@"
+  else
+    "${client}" "$@"
+  fi
+}
+
+cleanup() {
+  rm -f "${tmp}"
+}
 trap cleanup EXIT
 
 leaf_xml=""
@@ -105,9 +120,9 @@ case "${key}" in
   t300|t301|t310|n310|t311)
     leaf_xml="<srs:sib><srs:ue_timers_and_constants><srs:${key}>${value}</srs:${key}></srs:ue_timers_and_constants></srs:sib>"
     ;;
-  qci_profiles\\[*)
+  qci_profiles\[*)
     # key format: qci_profiles[7].discard_timer
-    if [[ "${key}" =~ ^qci_profiles\\[([0-9]+)\\]\\.([A-Za-z0-9_]+)$ ]]; then
+    if [[ "${key}" =~ ^qci_profiles\[([0-9]+)\]\.([A-Za-z0-9_]+)$ ]]; then
       qci="${BASH_REMATCH[1]}"
       field="${BASH_REMATCH[2]}"
       leaf_xml="<srs:qci_profiles><srs:qci>${qci}</srs:qci><srs:${field}>${value}</srs:${field}></srs:qci_profiles>"
@@ -146,37 +161,31 @@ echo "[netconf] get-config candidate:"
 run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" get-config candidate || true
 echo ""
 
-echo "[netconf] edit-config candidate ${key}=${value}"
+sequence_action="${action}"
+if [[ "${validate_after_edit}" != "1" ]]; then
+  echo "[netconf] warning: sequence mode always validates candidate before commit/discard" >&2
+fi
+
+echo "[netconf] sequence ${key}=${value} action=${sequence_action}"
 if [[ -n "${ems_container}" ]]; then
   docker exec -i \
     -e NETCONF_KNOWN_HOSTS="${known_hosts}" \
     -e NETCONF_KNOWN_HOSTS_MODE="${known_hosts_mode}" \
+    -e NETCONF_RPC_TIMEOUT_MS="${commit_timeout_ms}" \
     "${ems_container}" /app/netconf-client \
-    -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" edit-config candidate - < "${tmp}"
+    -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" sequence - "${sequence_action}" < "${tmp}"
 else
-  run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" edit-config candidate "${tmp}"
+  NETCONF_RPC_TIMEOUT_MS="${commit_timeout_ms}" run_client_stdin \
+    -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" sequence - "${sequence_action}" < "${tmp}"
 fi
-echo ""
 
-echo "[netconf] get-config candidate after edit:"
-run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" get-config candidate || true
-echo ""
-
-if [[ "${do_commit}" == "commit" ]]; then
-  echo "[netconf] commit"
-  if [[ -n "${ems_container}" ]]; then
-    docker exec -i \
-      -e NETCONF_KNOWN_HOSTS="${known_hosts}" \
-      -e NETCONF_KNOWN_HOSTS_MODE="${known_hosts_mode}" \
-      -e NETCONF_RPC_TIMEOUT_MS="${commit_timeout_ms}" \
-      "${ems_container}" /app/netconf-client \
-      -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" commit
-  else
-    NETCONF_RPC_TIMEOUT_MS="${commit_timeout_ms}" run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" commit
-  fi
+if [[ "${action}" == "commit" ]]; then
   echo ""
   echo "[netconf] get-config running after commit:"
   run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" get-config running || true
+elif [[ "${action}" == "discard" ]]; then
+  echo "[netconf] get-config candidate after discard:"
+  run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" get-config candidate || true
 else
-  echo "[netconf] commit skipped (5th arg is not 'commit')"
+  echo "[netconf] commit skipped (action=${action})"
 fi

@@ -3,3 +3,4 @@
 netconf/keys/
 netconf/known_hosts
 .vscode/
+docs/
