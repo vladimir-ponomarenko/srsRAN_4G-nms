@@ -5,6 +5,7 @@ host=${1:-127.0.0.1}
 port=${2:-8301}
 interval=${3:-1}
 rpc=${4:-"get"}
+rpc_arg=${5:-}
 loop_forever=1
 
 client=${NETCONF_CLIENT:-}
@@ -47,7 +48,7 @@ if [ -n "${ems_container}" ]; then
     echo "ems container not running: ${ems_container}" >&2
     exit 1
   fi
-  docker exec -i "${ems_container}" sh -c "touch \"${known_hosts}\"" >/dev/null 2>&1 || true
+  docker exec "${ems_container}" sh -c "touch \"${known_hosts}\"" >/dev/null 2>&1 || true
 else
   if [ -z "${client}" ]; then
     client="externals/lte-element-manager/.local/bin/netconf-client"
@@ -73,10 +74,21 @@ case "${rpc}" in
   "<get/>"|"get")
     rpc_cmd="get"
     ;;
+  "get-once")
+    rpc_cmd="get"
+    loop_forever=0
+    ;;
   "get-nrm")
     rpc_cmd="get"
     # Use prefixless XPath so the libnetconf2 example client does not need custom YANG modules
     # to validate prefixes locally.
+    rpc_xpath="/*[local-name()='SubNetwork'][*[local-name()='id']='${nrmsn}']"\
+"/*[local-name()='ManagedElement'][*[local-name()='id']='${nrmme}']"\
+"/*[local-name()='ENBFunction'][*[local-name()='id']='${nrmfn}']"
+    ;;
+  "get-nrm-once")
+    rpc_cmd="get"
+    loop_forever=0
     rpc_xpath="/*[local-name()='SubNetwork'][*[local-name()='id']='${nrmsn}']"\
 "/*[local-name()='ManagedElement'][*[local-name()='id']='${nrmme}']"\
 "/*[local-name()='ENBFunction'][*[local-name()='id']='${nrmfn}']"
@@ -121,6 +133,18 @@ case "${rpc}" in
     rpc_ds="candidate"
     loop_forever=0
     ;;
+  "hold-lock-running")
+    rpc_cmd="hold-lock"
+    rpc_ds="running"
+    rpc_duration="${rpc_arg:-${NETCONF_HOLD_SECONDS:-60}}"
+    loop_forever=0
+    ;;
+  "hold-lock-candidate")
+    rpc_cmd="hold-lock"
+    rpc_ds="candidate"
+    rpc_duration="${rpc_arg:-${NETCONF_HOLD_SECONDS:-60}}"
+    loop_forever=0
+    ;;
   "unlock-running")
     rpc_cmd="unlock"
     rpc_ds="running"
@@ -140,6 +164,10 @@ case "${rpc}" in
     rpc_duration="${NETCONF_SUBSCRIBE_SECONDS:-30}"
     loop_forever=0
     ;;
+  "interactive")
+    rpc_cmd="interactive"
+    loop_forever=0
+    ;;
   *)
     rpc_cmd="${rpc}"
     ;;
@@ -157,7 +185,9 @@ while true; do
       run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_xpath}"
     fi
   else
-    if [ -n "${rpc_ds:-}" ]; then
+    if [ -n "${rpc_ds:-}" ] && [ -n "${rpc_duration:-}" ]; then
+      run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_ds}" "${rpc_duration}"
+    elif [ -n "${rpc_ds:-}" ]; then
       run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_ds}"
     elif [ -n "${rpc_duration:-}" ]; then
       run_client -H "${host}" -p "${port}" -P "${pub_key}" -i "${priv_key}" "${rpc_cmd}" "${rpc_duration}"

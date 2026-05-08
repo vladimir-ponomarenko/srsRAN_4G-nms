@@ -46,9 +46,117 @@ nrm:
   enb_function_id: "1"
 
 pm:
-  enabled: false
+  enabled: true
   granularity_period: 10s
   report_period: 10s
+
+fm:
+  tca:
+    enabled: true
+    test_injection_enabled: false
+    rules:
+      s1_interface_down:
+        enabled: true
+        raise_threshold: 1
+        clear_threshold: 1
+        raise_duration: 0s
+        clear_duration: 10s
+      nas_signaling_loss:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      nas_security_mismatch:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      nas_parsing_failure:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      rrc_protocol_error:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      rrc_connection_rejection:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      core_service_reject:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      paging_capacity_exceeded:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      rlc_max_retransmissions:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      low_throughput:
+        enabled: true
+        raise_threshold: 1000000
+        clear_threshold: 1000001
+        raise_duration: 30s
+        clear_duration: 10s
+      bad_signal_condition:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 5
+        raise_duration: 10s
+        clear_duration: 10s
+      high_bler:
+        enabled: true
+        raise_threshold: 0.10
+        clear_threshold: 0.05
+        raise_duration: 10s
+        clear_duration: 10s
+      radio_link_failure_storm:
+        enabled: true
+        raise_threshold: 5
+        clear_threshold: 0
+        raise_duration: 0s
+        clear_duration: 30s
+      rf_interference_detected:
+        enabled: true
+        raise_threshold: -90
+        clear_threshold: -95
+        raise_duration: 10s
+        clear_duration: 10s
+      ue_inactivity_cleanup:
+        enabled: true
+        raise_threshold: 0.8
+        clear_threshold: 0.1
+        raise_duration: 30s
+        clear_duration: 30s
+      bearer_congestion:
+        enabled: true
+        raise_threshold: 500000
+        clear_threshold: 100000
+        raise_duration: 10s
+        clear_duration: 10s
+      power_headroom_critical:
+        enabled: true
+        raise_threshold: 0
+        clear_threshold: 3
+        raise_duration: 10s
+        clear_duration: 10s
 
 control:
   enabled: true
@@ -58,7 +166,7 @@ control:
     timeout: 20s
     targets:
       - container: ENB-2
-        enb_config_path: /app/element-config/enb.conf
-        rr_config_path: /app/element-config/rr.conf
-        sib_config_path: /app/element-config/sib.conf
-        rb_config_path: /app/element-config/rb.conf
+        enb_config_path: /app/element-config/enb2.conf
+        rr_config_path: /app/element-config/enb2_rr.conf
+        sib_config_path: /app/element-config/enb2_sib.conf
+        rb_config_path: /app/element-config/enb2_rb.conf

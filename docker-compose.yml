@@ -24,12 +24,9 @@ services:
     container_name: ENB-1
     privileged: true
     volumes:
-      - ./config/srsRAN4G/enb1.conf:/etc/srsran/enb.conf
-      - ./config/srsRAN4G/enb1_rr.conf:/etc/srsran/rr.conf
-      - ./config/srsRAN4G/enb1_sib.conf:/etc/srsran/sib.conf
-      - ./config/srsRAN4G/enb1_rb.conf:/etc/srsran/rb.conf
+      - ./config/srsRAN4G:/etc/srsran
       - enb1_metrics:/var/run/enb-metrics
-    command: srsenb /etc/srsran/enb.conf
+    command: srsenb /etc/srsran/enb1.conf
     restart: always
     stop_signal: SIGINT
     stop_grace_period: 40s
@@ -60,12 +57,9 @@ services:
     container_name: ENB-2
     privileged: true
     volumes:
-      - ./config/srsRAN4G/enb2.conf:/etc/srsran/enb.conf
-      - ./config/srsRAN4G/enb2_rr.conf:/etc/srsran/rr.conf
-      - ./config/srsRAN4G/enb2_sib.conf:/etc/srsran/sib.conf
-      - ./config/srsRAN4G/enb2_rb.conf:/etc/srsran/rb.conf
+      - ./config/srsRAN4G:/etc/srsran
       - enb2_metrics:/var/run/enb-metrics
-    command: srsenb /etc/srsran/enb.conf
+    command: srsenb /etc/srsran/enb2.conf
     restart: always
     stop_signal: SIGINT
     stop_grace_period: 40s
@@ -145,10 +139,7 @@ services:
       - EMS_CONFIG=/app/config/enb1.yaml
     volumes:
       - ./config/ems-agent/enb1.yaml:/app/config/enb1.yaml:ro
-      - ./config/srsRAN4G/enb1.conf:/app/element-config/enb.conf
-      - ./config/srsRAN4G/enb1_rr.conf:/app/element-config/rr.conf
-      - ./config/srsRAN4G/enb1_sib.conf:/app/element-config/sib.conf
-      - ./config/srsRAN4G/enb1_rb.conf:/app/element-config/rb.conf
+      - ./config/srsRAN4G:/app/element-config
       - enb1_metrics:/var/run/enb-metrics
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
@@ -170,10 +161,7 @@ services:
       - EMS_CONFIG=/app/config/enb2.yaml
     volumes:
       - ./config/ems-agent/enb2.yaml:/app/config/enb2.yaml:ro
-      - ./config/srsRAN4G/enb2.conf:/app/element-config/enb.conf
-      - ./config/srsRAN4G/enb2_rr.conf:/app/element-config/rr.conf
-      - ./config/srsRAN4G/enb2_sib.conf:/app/element-config/sib.conf
-      - ./config/srsRAN4G/enb2_rb.conf:/app/element-config/rb.conf
+      - ./config/srsRAN4G:/app/element-config
       - enb2_metrics:/var/run/enb-metrics
       - /var/run/docker.sock:/var/run/docker.sock
     ports:

@@ -1,7 +1,7 @@
 -include .env
 export
 
-.PHONY: help submodules lte-element-manager-clone netconf-client build build-fast build-ems build-enb build-ems-fast build-enb-fast pull-images up down restart ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 logs-radio-supervisor net-check netconf-keys netconf-poll-enb1 netconf-poll-enb2 netconf-poll-enb1-nrm netconf-poll-enb2-nrm netconf-poll-enb1-nrm-cells netconf-poll-enb2-nrm-cells nbi-edit-enb1-nprb nbi-edit-enb2-nprb restart-enb-by-serial restart-radio-pair1 restart-radio-pair2 iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul clean distclean
+.PHONY: help submodules lte-element-manager-clone netconf-client build build-fast build-ems build-enb build-ems-fast build-enb-fast pull-images up down restart ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 logs-radio-supervisor net-check netconf-keys netconf-poll-enb1 netconf-poll-enb2 netconf-poll-enb1-nrm netconf-poll-enb2-nrm netconf-poll-enb1-nrm-cells netconf-poll-enb2-nrm-cells netconf-hold-lock-enb1 netconf-hold-lock-enb2 nbi-edit-enb1-nprb nbi-edit-enb2-nprb tca-inject-enb1 tca-inject-enb2 restart-enb-by-serial restart-radio-pair1 restart-radio-pair2 iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul clean distclean
 
 help:
 	@echo "Usage: make [build|up|down|restart|ue1-shell|ue2-shell|enb1-shell|enb2-shell|epc-shell|ems1-shell|ems2-shell|logs|logs-all|logs-epc|logs-enb1|logs-enb2|logs-ue1|logs-ue2|logs-ems1|logs-ems2|net-check|iperf-epc-server|iperf-ue1-server|iperf-ue2-server|iperf-ue1-dl|iperf-ue1-ul|iperf-ue2-dl|iperf-ue2-ul]"
@@ -10,6 +10,13 @@ POLL_INTERVAL ?= 1
 SERIAL ?=
 NPRB ?= 50
 DOWN_TIMEOUT ?= 10
+LOCK_SECONDS ?= 60
+TCA_MOI_ENB1 ?= SubNetwork=srsRAN/ManagedElement=enb1/ENBFunction=1
+TCA_MOI_ENB2 ?= SubNetwork=srsRAN/ManagedElement=enb2/ENBFunction=1
+TCA_METRIC ?= s1ap.ready
+TCA_VALUE ?= 0
+TCA_REPEAT ?= 1
+TCA_DELAY ?= 1
 
 lte-element-manager-clone: submodules
 	$(MAKE) -C externals/lte-element-manager clone
@@ -125,11 +132,23 @@ netconf-poll-enb1-nrm-cells:
 netconf-poll-enb2-nrm-cells:
 	NETCONF_EMS_CONTAINER=EMS-ENB-2 NETCONF_NRM_MANAGED_ELEMENT=enb2 bash build/scripts/netconf_poll.sh 127.0.0.1 8302 $(POLL_INTERVAL) get-nrm-cells
 
+netconf-hold-lock-enb1:
+	NETCONF_EMS_CONTAINER=EMS-ENB-1 bash build/scripts/netconf_poll.sh 127.0.0.1 8301 1 hold-lock-candidate $(LOCK_SECONDS)
+
+netconf-hold-lock-enb2:
+	NETCONF_EMS_CONTAINER=EMS-ENB-2 bash build/scripts/netconf_poll.sh 127.0.0.1 8302 1 hold-lock-candidate $(LOCK_SECONDS)
+
 nbi-edit-enb1-nprb:
 	NETCONF_EMS_CONTAINER=EMS-ENB-1 NETCONF_NRM_MANAGED_ELEMENT=enb1 bash build/scripts/netconf_config_edit.sh 127.0.0.1 8301 n_prb $(NPRB) commit
 
 nbi-edit-enb2-nprb:
 	NETCONF_EMS_CONTAINER=EMS-ENB-2 NETCONF_NRM_MANAGED_ELEMENT=enb2 bash build/scripts/netconf_config_edit.sh 127.0.0.1 8302 n_prb $(NPRB) commit
+
+tca-inject-enb1:
+	bash build/scripts/tca_inject_metric.sh 127.0.0.1 18081 "$(TCA_MOI_ENB1)" "$(TCA_METRIC)" "$(TCA_VALUE)" "$(TCA_REPEAT)" "$(TCA_DELAY)"
+
+tca-inject-enb2:
+	bash build/scripts/tca_inject_metric.sh 127.0.0.1 18082 "$(TCA_MOI_ENB2)" "$(TCA_METRIC)" "$(TCA_VALUE)" "$(TCA_REPEAT)" "$(TCA_DELAY)"
 
 restart-enb-by-serial:
 	@if [ -z "$(SERIAL)" ]; then echo "Usage: make restart-enb-by-serial SERIAL='<enb_serial>'"; exit 2; fi
