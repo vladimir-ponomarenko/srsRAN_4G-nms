@@ -1,0 +1,26 @@
+# syntax=docker/dockerfile:1.6
+# Compile only the 5G RFSimulator targets.
+FROM ran-base:latest AS ran-build
+
+ARG BUILD_OPTION
+
+RUN rm -rf /oai-ran
+WORKDIR /oai-ran
+COPY . .
+
+RUN --mount=type=cache,target=/root/.cache/ccache/ \
+    --mount=type=cache,target=/root/.cache/cpm/ \
+    /bin/sh oaienv && \
+    cd cmake_targets && \
+    mkdir -p log && \
+    ./build_oai -c --ninja \
+      --gNB --nrUE \
+      --build-lib "telnetsrv nrscope" \
+      -w SIMU \
+      --noavx512 \
+      --build-tool-opt -k10 \
+      $BUILD_OPTION && \
+    echo "---- ldd on 5G RFSimulator executables ----" && \
+    ldd ran_build/build/nr-softmodem ran_build/build/nr-uesoftmodem && \
+    echo "---- ldd on shared libraries ----" && \
+    ldd ran_build/build/*.so

@@ -5,3 +5,9 @@
 [submodule "externals/lte-element-manager"]
 	path = externals/lte-element-manager
 	url = https://github.com/vladimir-ponomarenko/lte-element-manager
+[submodule "externals/openairinterface5g"]
+	path = externals/openairinterface5g
+	url = https://github.com/vladimir-ponomarenko/openairinterface5g.git
+[submodule "externals/open5gs"]
+	path = externals/open5gs
+	url = https://github.com/open5gs/open5gs.git

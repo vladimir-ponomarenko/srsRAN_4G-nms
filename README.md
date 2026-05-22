@@ -6,6 +6,22 @@
 make build
 make up
 ```
+
+The default `make build` / `make up` path is the existing 4G profile.
+
+## 5G RFSimulator Profile
+
+The 5G profile builds Open5GS from `externals/open5gs` and OAI gNB/nrUE from `externals/openairinterface5g`:
+
+```bash
+make build-5g
+make up-5g
+make net-check-5g
+make iperf-5g-dl
+make iperf-5g-ul
+```
+
+Full runbook: [docs/5G_OPEN5GS_OAI_RFSIM.md](docs/5G_OPEN5GS_OAI_RFSIM.md). (gitignored now)
 `make build` initializes submodules, prepares NETCONF keys, and builds all Docker images including srsRAN, EMS, libyang, libnetconf2, the C NETCONF server, and the test NETCONF client.
 
 

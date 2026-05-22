@@ -1,0 +1,130 @@
+services:
+  mongo-5g:
+    image: mongo:6.0
+    container_name: 5G-MONGO
+    command: ["--bind_ip", "0.0.0.0"]
+    volumes:
+      - ./config/open5gs5g/mongo-init.js:/docker-entrypoint-initdb.d/01-open5gs-subscriber.js:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 }).ok' | grep 1 >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks:
+      fiveg:
+        ipv4_address: 10.55.0.2
+
+  open5gs-5gc:
+    build:
+      context: .
+      dockerfile: build/open5gs5g/Dockerfile
+    image: srsran4g-nms-open5gs-5gc:local
+    container_name: 5G-OPEN5GS
+    privileged: true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      - net.ipv4.ip_forward=1
+    environment:
+      - OPEN5GS_CONFIG=/etc/open5gs/open5gs-5gc.yaml
+      - OPEN5GS_MONGO_HOST=mongo-5g
+      - OPEN5GS_TUN_DEV=ogstun
+      - OPEN5GS_UE_SUBNET=12.1.1.0/24
+      - OPEN5GS_UE_GATEWAY=12.1.1.1/24
+    volumes:
+      - ./config/open5gs5g/open5gs-5gc.yaml:/etc/open5gs/open5gs-5gc.yaml:ro
+    depends_on:
+      mongo-5g:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep open5gs-amfd >/dev/null && pgrep open5gs-smfd >/dev/null && pgrep open5gs-upfd >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+    networks:
+      fiveg:
+        ipv4_address: 10.55.0.10
+
+  open5gs-ext-dn:
+    image: srsran4g-nms-open5gs-5gc:local
+    container_name: 5G-EXT-DN
+    cap_add:
+      - NET_ADMIN
+    entrypoint:
+      - /bin/bash
+      - -lc
+      - ip route replace 12.1.1.0/24 via 10.55.0.10 dev eth0 && exec iperf3 -s -B 0.0.0.0
+    depends_on:
+      open5gs-5gc:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep iperf3 >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 2s
+    networks:
+      fiveg:
+        ipv4_address: 10.55.0.50
+
+  oai-gnb:
+    image: srsran4g-nms-oai-gnb:local
+    container_name: 5G-OAI-GNB
+    cap_add:
+      - SYS_NICE
+    environment:
+      USE_ADDITIONAL_OPTIONS: >-
+        -E --rfsim --rfsimulator.serveraddr server --log_config.global_log_options level,nocolor,time
+      ASAN_OPTIONS: detect_leaks=0
+    volumes:
+      - ./config/oai5g/gnb.yaml:/opt/oai-gnb/etc/gnb.yaml:ro
+    depends_on:
+      open5gs-5gc:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep nr-softmodem >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      fiveg:
+        ipv4_address: 10.55.0.20
+
+  oai-nr-ue:
+    image: srsran4g-nms-oai-nr-ue:local
+    container_name: 5G-OAI-NR-UE
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+      - SYS_NICE
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      USE_ADDITIONAL_OPTIONS: >-
+        -E --rfsim -r 106 --numerology 1 --uicc0.imsi 208990100001100 -C 3319680000 --rfsimulator.serveraddr 10.55.0.20 --log_config.global_log_options level,nocolor,time
+    volumes:
+      - ./config/oai5g/nr-ue.yaml:/opt/oai-nr-ue/etc/nr-ue.yaml:ro
+    depends_on:
+      oai-gnb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep nr-uesoftmodem >/dev/null"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      fiveg:
+        ipv4_address: 10.55.0.30
+
+networks:
+  fiveg:
+    name: srsran4g-nms-5g
+    ipam:
+      config:
+        - subnet: 10.55.0.0/24

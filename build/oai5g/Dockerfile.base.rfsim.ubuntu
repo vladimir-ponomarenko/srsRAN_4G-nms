@@ -1,0 +1,50 @@
+# syntax=docker/dockerfile:1.6
+
+FROM ubuntu:noble AS ran-base
+
+ARG TARGETARCH=amd64
+ARG NEEDED_GIT_PROXY
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Paris
+
+RUN apt-get update && \
+    apt-get upgrade --yes && \
+    apt-get install --yes --no-install-recommends \
+      build-essential \
+      ccache \
+      psmisc \
+      git \
+      xxd \
+      libpcre2-dev \
+      python3-dev \
+      bison \
+      flex \
+      m4 \
+      python3-pip \
+      wget \
+      ca-certificates && \
+    pip3 install --ignore-installed pyyaml --break-system-packages && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV TINI_VERSION=v0.19.0
+RUN wget "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${TARGETARCH}" -O /tini && chmod +x /tini
+
+ENV YQ_VERSION=v4.2.0
+RUN wget "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${TARGETARCH}" -O /usr/local/bin/yq && chmod +x /usr/local/bin/yq
+
+RUN /bin/bash -c 'if [[ -v NEEDED_GIT_PROXY ]]; then git config --global http.proxy "$NEEDED_GIT_PROXY"; fi'
+
+WORKDIR /oai-ran/cmake_targets/tools
+COPY cmake_targets/tools/build_helper .
+
+WORKDIR /oai-ran/cmake_targets
+COPY cmake_targets/build_oai .
+
+WORKDIR /oai-ran
+COPY oaienv .
+
+RUN /bin/sh oaienv && \
+    cd cmake_targets && \
+    mkdir -p log && \
+    ./build_oai -I -w SIMU --install-optional-packages

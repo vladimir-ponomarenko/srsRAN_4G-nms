@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1.6
+FROM ran-build:latest AS nr-ue-build
+FROM ran-base:latest AS nr-ue-base
+
+FROM ubuntu:noble AS oai-nr-ue
+ARG BUILD_OPTION
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Europe/Paris
+
+RUN apt-get update && \
+    apt-get upgrade --yes && \
+    apt-get install --yes --no-install-recommends \
+      software-properties-common \
+      procps \
+      libsctp1 \
+      libboost-chrono1.83.0 \
+      libboost-date-time1.83.0 \
+      libboost-filesystem1.83.0 \
+      libboost-regex1.83.0 \
+      libboost-serialization1.83.0 \
+      libboost-thread1.83.0 \
+      libboost-system1.83.0 \
+      libboost-program-options1.83.0 \
+      tzdata \
+      liblapacke \
+      libblas3 \
+      libconfig9 \
+      openssl \
+      net-tools \
+      gdb \
+      python3 \
+      python3-six \
+      python3-requests \
+      iputils-ping \
+      iproute2 \
+      iperf3 \
+      iperf \
+      libyaml-cpp-dev && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/oai-nr-ue/bin
+COPY --from=nr-ue-build /oai-ran/cmake_targets/ran_build/build/nr-uesoftmodem ./
+COPY ./docker/scripts/nr_ue_entrypoint.sh ./entrypoint.sh
+COPY --from=nr-ue-build /oai-ran/cmake_targets/ran_build/build/*.so /usr/local/lib/
+COPY --from=nr-ue-base /usr/local/bin/yq /usr/local/bin/yq
+COPY --from=nr-ue-base /tini /tini
+
+RUN ldconfig && \
+    echo "---- ldd on nr-uesoftmodem ----" && \
+    ldd /opt/oai-nr-ue/bin/nr-uesoftmodem && \
+    echo "---- ldd on librfsimulator ----" && \
+    ldd /usr/local/lib/librfsimulator.so
+
+WORKDIR /opt/oai-nr-ue
+ENTRYPOINT ["/tini", "-v", "--", "/opt/oai-nr-ue/bin/entrypoint.sh"]
+CMD ["/opt/oai-nr-ue/bin/nr-uesoftmodem"]
