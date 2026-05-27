@@ -1,7 +1,7 @@
 -include .env
 export
 
-.PHONY: help submodules lte-element-manager-clone netconf-client build build-fast build-4g build-4g-fast build-5g build-5g-fast build-oai5g build-open5gs5g pull-images pull-images-5g up up-4g up-5g down down-4g down-5g restart restart-4g restart-5g build-ems build-enb build-ems-fast build-enb-fast ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 logs-radio-supervisor logs-5g logs-5g-core logs-5g-gnb logs-5g-ue net-check net-check-5g netconf-keys netconf-poll-enb1 netconf-poll-enb2 netconf-poll-enb1-nrm netconf-poll-enb2-nrm netconf-poll-enb1-nrm-cells netconf-poll-enb2-nrm-cells netconf-hold-lock-enb1 netconf-hold-lock-enb2 nbi-edit-enb1-nprb nbi-edit-enb2-nprb tca-inject-enb1 tca-inject-enb2 restart-enb-by-serial restart-radio-pair1 restart-radio-pair2 iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul iperf-5g-dl iperf-5g-ul clean clean-5g distclean
+.PHONY: help submodules lte-element-manager-clone netconf-client build build-fast build-4g build-4g-fast build-5g build-5g-fast build-oai5g build-open5gs5g pull-images pull-images-5g up up-4g up-5g down down-4g down-5g restart restart-4g restart-5g build-ems build-enb build-ems-fast build-enb-fast ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 logs-ems-epc logs-radio-supervisor logs-5g logs-5g-core logs-5g-gnb logs-5g-ue net-check net-check-5g netconf-keys netconf-poll-enb1 netconf-poll-enb2 netconf-poll-enb1-nrm netconf-poll-enb2-nrm netconf-poll-enb1-nrm-cells netconf-poll-enb2-nrm-cells netconf-hold-lock-enb1 netconf-hold-lock-enb2 nbi-edit-enb1-nprb nbi-edit-enb2-nprb tca-inject-enb1 tca-inject-enb2 restart-enb-by-serial restart-radio-pair1 restart-radio-pair2 iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul iperf-5g-dl iperf-5g-ul clean clean-5g distclean
 
 help:
 	@echo "4G (default): make build && make up"
@@ -116,6 +116,12 @@ ems1-shell:
 ems2-shell:
 	docker exec -it EMS-ENB-2 sh
 
+ems-epc-shell:
+	docker exec -it EMS-EPC sh
+
+logs-epc-metrics:
+	docker compose logs -f srsepc
+
 logs:
 	docker compose logs -f
 
@@ -142,6 +148,9 @@ logs-ems1:
 
 logs-ems2:
 	docker compose logs -f ems-enb2
+
+logs-ems-epc:
+	docker compose logs -f ems-epc
 
 logs-radio-supervisor:
 	docker compose logs -f radio-supervisor

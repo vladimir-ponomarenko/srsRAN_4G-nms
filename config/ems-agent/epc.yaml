@@ -1,0 +1,33 @@
+element:
+  type: epc
+  socket_path: /var/run/epc-metrics/epc_metrics.uds
+
+bus:
+  buffer: 200
+
+log:
+  level: info
+  format: console
+  color: true
+  timestamp: true
+  components:
+    adapter: debug
+    metrics: debug
+
+metrics:
+  snapshot_path: /var/run/epc-metrics/epc_metrics.json
+  log_uds_metrics: true
+
+netconf:
+  enabled: false
+  snapshot_path: /var/run/epc-metrics/epc_metrics.json
+
+pm:
+  enabled: false
+
+fm:
+  tca:
+    enabled: false
+
+control:
+  enabled: false

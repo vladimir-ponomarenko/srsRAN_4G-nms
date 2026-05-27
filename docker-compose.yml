@@ -11,6 +11,7 @@ services:
     volumes:
       - ./config/srsRAN4G/epc.conf:/etc/srsran/epc.conf
       - ./config/srsRAN4G/user_db.csv:/etc/srsran/user_db.csv
+      - epc_metrics:/var/run/epc-metrics
     entrypoint: /opt/srsran/epc_entrypoint.sh
     networks:
       backhaul:
@@ -170,6 +171,23 @@ services:
     tty: true
     stdin_open: true
 
+  ems-epc:
+    build:
+      context: .
+      dockerfile: build/ems-agent/Dockerfile
+    container_name: EMS-EPC
+    depends_on:
+      - srsepc
+    environment:
+      - TERM=xterm-256color
+      - EMS_CONFIG=/app/config/epc.yaml
+    volumes:
+      - ./config/ems-agent/epc.yaml:/app/config/epc.yaml:ro
+      - epc_metrics:/var/run/epc-metrics
+      - /var/run/docker.sock:/var/run/docker.sock
+    tty: true
+    stdin_open: true
+
   radio-supervisor:
     image: docker:27-cli
     container_name: RADIO-SUPERVISOR
@@ -195,3 +213,4 @@ networks:
 volumes:
   enb1_metrics:
   enb2_metrics:
+  epc_metrics:
