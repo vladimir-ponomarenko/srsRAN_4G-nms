@@ -132,9 +132,8 @@ services:
     build:
       context: .
       dockerfile: build/ems-agent/Dockerfile
-      args:
-        NETCONF_DIR: ./externals/lte-element-manager/third_party/libnetconf2
-        YANG_DIR: ./externals/lte-element-manager/third_party/libyang
+      additional_contexts:
+        third-party: ./externals/lte-element-manager/third_party
     container_name: EMS-ENB-1
     depends_on:
       - srsenb-1
@@ -157,9 +156,8 @@ services:
     build:
       context: .
       dockerfile: build/ems-agent/Dockerfile
-      args:
-        NETCONF_DIR: ./externals/lte-element-manager/third_party/libnetconf2
-        YANG_DIR: ./externals/lte-element-manager/third_party/libyang
+      additional_contexts:
+        third-party: ./externals/lte-element-manager/third_party
     container_name: EMS-ENB-2
     depends_on:
       - srsenb-2
@@ -181,9 +179,8 @@ services:
     build:
       context: .
       dockerfile: build/ems-agent/Dockerfile
-      args:
-        NETCONF_DIR: ./externals/lte-element-manager/third_party/libnetconf2
-        YANG_DIR: ./externals/lte-element-manager/third_party/libyang
+      additional_contexts:
+        third-party: ./externals/lte-element-manager/third_party
 
     container_name: EMS-EPC
     depends_on:
