@@ -82,6 +82,8 @@ services:
       ASAN_OPTIONS: detect_leaks=0
     volumes:
       - ./config/oai5g/gnb.yaml:/opt/oai-gnb/etc/gnb.yaml:ro
+      - gnb_metrics:/var/run/gnb-metrics
+    working_dir: /var/run/gnb-metrics
     depends_on:
       open5gs-5gc:
         condition: service_healthy
@@ -94,6 +96,30 @@ services:
     networks:
       fiveg:
         ipv4_address: 10.55.0.20
+
+  ems-gnb:
+    build:
+      context: .
+      dockerfile: build/ems-agent/Dockerfile
+      arguments:
+        NETCONF_DIR: ./externals/lte-element-manager/third_party/libnetconf2
+        YANG_DIR: ./externals/lte-element-manager/third_party/libyang
+
+    container_name: EMS-GNB
+    depends_on:
+      - oai-gnb
+    environment:
+      - TERM=xterm-256color
+      - EMS_CONFIG=/app/config/gnb.yaml
+    volumes:
+      - ./config/ems-agent/gnb.yaml:/app/config/gnb.yaml:ro
+      - gnb_metrics:/var/run/gnb-metrics
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "8303:8303"
+      - "18083:18083"
+    tty: true
+    stdin_open: true
 
   oai-nr-ue:
     image: srsran4g-nms-oai-nr-ue:local
@@ -128,3 +154,6 @@ networks:
     ipam:
       config:
         - subnet: 10.55.0.0/24
+
+volumes:
+  gnb_metrics:

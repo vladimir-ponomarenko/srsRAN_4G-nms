@@ -21,8 +21,11 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     go mod download
 
-COPY externals/lte-element-manager/third_party/libyang /src/third_party/libyang
-COPY externals/lte-element-manager/third_party/libnetconf2 /src/third_party/libnetconf2
+ARG NETCONF_DIR
+ARG YANG_DIR
+
+COPY ${YANG_DIR} /src/third_party/libyang
+COPY ${NETCONF_DIR} /src/third_party/libnetconf2
 
 RUN --mount=type=cache,target=/tmp/libyang-build \
     --mount=type=cache,target=/root/.cache \
