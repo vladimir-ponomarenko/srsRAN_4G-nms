@@ -169,7 +169,7 @@ RUs:
     sdr_addrs: serial=XXXXXXX
 
 rfsimulator:
-  serveraddr: server
+  - serveraddr: server
 
 security:
   # preferred ciphering algorithms
@@ -197,3 +197,9 @@ log_config:
   rrc_log_level: info
   ngap_log_level: debug
   f1ap_log_level: debug
+
+# O-RAN E2 agent. The nearRT-RIC runs in this container, so the agent connects
+# over loopback; both parameters must be set.
+e2_agent:
+  near_ric_ip_addr: "127.0.0.1"
+  sm_dir: "/usr/local/lib/flexric/"

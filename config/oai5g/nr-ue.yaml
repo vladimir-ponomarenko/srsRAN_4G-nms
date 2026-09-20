@@ -11,7 +11,7 @@ uicc0:
 thread-pool: "-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1"
 
 rfsimulator:
-  serveraddr: "10.55.0.20"
+  - serveraddr: "10.55.0.20"
 
 #/* configuration for channel modelisation */
 #/* To be included in main config file when */
