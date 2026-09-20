@@ -16,11 +16,14 @@ RUN --mount=type=cache,target=/root/.cache/ccache/ \
     ./build_oai -c --ninja \
       --gNB --nrUE \
       --build-lib "telnetsrv nrscope" \
+      --build-e2 \
       -w SIMU \
       --noavx512 \
       --build-tool-opt -k10 \
       $BUILD_OPTION && \
     echo "---- ldd on 5G RFSimulator executables ----" && \
     ldd ran_build/build/nr-softmodem ran_build/build/nr-uesoftmodem && \
+    echo "---- E2 agent built into nr-softmodem ----" && \
+    nm ran_build/build/nr-softmodem | grep -c E2_AGENT || true && \
     echo "---- ldd on shared libraries ----" && \
     ldd ran_build/build/*.so

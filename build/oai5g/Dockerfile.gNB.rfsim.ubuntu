@@ -1,6 +1,30 @@
 # syntax=docker/dockerfile:1.6
 FROM ran-build:latest AS gnb-build
-FROM ran-base:latest AS gnb-base
+FROM ran-base:latest AS ric-build
+
+# Build the nearRT-RIC, the E2SM service-model plugins and the EMS telemetry
+# xApp from the same FlexRIC tree the gNB E2 agent was compiled against, so
+# both sides agree on the E2AP and KPM dialect.
+RUN apt-get update && \
+    apt-get install --yes --no-install-recommends cmake libsctp-dev && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*
+
+COPY externals/openairinterface5g/openair2/E2AP/flexric /flexric
+COPY build/oai5g/xapp /flexric/examples/xApp/c/ems
+
+# Build the xApp as part of the FlexRIC tree so it links the e42_xapp target
+# and inherits the E2AP/KPM version defines of the agent.
+RUN echo "add_subdirectory(ems)" >> /flexric/examples/xApp/c/CMakeLists.txt && \
+    cmake -S /flexric -B /flexric/build \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DNEAR_RIC_INSTALL="TRUE" && \
+    cmake --build /flexric/build --parallel "$(nproc)" && \
+    cmake --install /flexric/build && \
+    ldconfig && \
+    echo "---- installed RIC/xApp binaries ----" && \
+    ls -l /usr/local/bin/nearRT-RIC /usr/local/bin/ems_gnb_metrics_xapp && \
+    echo "---- installed E2SM plugins ----" && \
+    ls -l /usr/local/lib/flexric/
 
 FROM ubuntu:noble AS oai-gnb
 ARG BUILD_OPTION
@@ -41,18 +65,28 @@ RUN apt-get update && \
 
 WORKDIR /opt/oai-gnb/bin
 COPY --from=gnb-build /oai-ran/cmake_targets/ran_build/build/nr-softmodem ./
-COPY ./docker/scripts/gnb_entrypoint.sh ./entrypoint.sh
-COPY ./docker/scripts/check-prach-io.sh ./check-prach-io.sh
+COPY externals/openairinterface5g/docker/scripts/gnb_entrypoint.sh ./entrypoint.sh
+COPY externals/openairinterface5g/docker/scripts/check-prach-io.sh ./check-prach-io.sh
 COPY --from=gnb-build /oai-ran/cmake_targets/ran_build/build/*.so /usr/local/lib/
-COPY --from=gnb-base /usr/local/bin/yq /usr/local/bin/yq
-COPY --from=gnb-base /tini /tini
+COPY --from=ric-build /usr/local/bin/nearRT-RIC /usr/local/bin/
+COPY --from=ric-build /usr/local/bin/ems_gnb_metrics_xapp /usr/local/bin/
+COPY --from=ric-build /usr/local/lib/flexric /usr/local/lib/flexric
+# The RIC and the xApp exit() if the flexric config file is missing, so the
+# default loopback RIC address has to be present in the image.
+COPY externals/openairinterface5g/openair2/E2AP/flexric/flexric.conf /usr/local/etc/flexric/flexric.conf
+COPY build/oai5g/scripts/gnb_metrics_entrypoint.sh /opt/oai-gnb/bin/node_entrypoint.sh
+COPY --from=gnb-build /usr/local/bin/yq /usr/local/bin/yq
+COPY --from=gnb-build /tini /tini
 
 RUN ldconfig && \
+    chmod +x /opt/oai-gnb/bin/node_entrypoint.sh && \
     echo "---- ldd on nr-softmodem ----" && \
     ldd /opt/oai-gnb/bin/nr-softmodem && \
     echo "---- ldd on librfsimulator ----" && \
-    ldd /usr/local/lib/librfsimulator.so
+    ldd /usr/local/lib/librfsimulator.so && \
+    echo "---- ldd on ems_gnb_metrics_xapp ----" && \
+    ldd /usr/local/bin/ems_gnb_metrics_xapp
 
 WORKDIR /opt/oai-gnb
-ENTRYPOINT ["/tini", "-v", "--", "/opt/oai-gnb/bin/entrypoint.sh"]
+ENTRYPOINT ["/tini", "-v", "--", "/opt/oai-gnb/bin/node_entrypoint.sh"]
 CMD ["/opt/oai-gnb/bin/nr-softmodem"]
