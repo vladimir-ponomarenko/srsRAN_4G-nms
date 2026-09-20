@@ -4,3 +4,4 @@ netconf/keys/
 netconf/known_hosts
 .vscode/
 docs/
+HANDOFF_*.md
