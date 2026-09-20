@@ -78,12 +78,20 @@ services:
       - SYS_NICE
     environment:
       USE_ADDITIONAL_OPTIONS: >-
-        -E --rfsim --rfsimulator.serveraddr server --log_config.global_log_options level,nocolor,time
+        -E --rfsim --log_config.global_log_options level,nocolor,time
       ASAN_OPTIONS: detect_leaks=0
+      # Telemetry export contract for the EMS metrics xApp.
+      EMS_GNB_METRICS_SOCKET: /var/run/gnb-metrics/gnb_metrics.uds
+      GNB_ID: gnb-rfsim
+      GNB_SERIAL: oai-gnb-1
+      GNB_NR_CELL_ID: "12345678"
+      GNB_PCI: "0"
+      XAPP_EXPORT_INTERVAL_MS: "1000"
+      XAPP_IND_INTERVAL: 10_ms
+      KPM_PERIOD_MS: "1000"
     volumes:
       - ./config/oai5g/gnb.yaml:/opt/oai-gnb/etc/gnb.yaml:ro
       - gnb_metrics:/var/run/gnb-metrics
-    working_dir: /var/run/gnb-metrics
     depends_on:
       open5gs-5gc:
         condition: service_healthy
@@ -97,30 +105,6 @@ services:
       fiveg:
         ipv4_address: 10.55.0.20
 
-  ems-gnb:
-    build:
-      context: .
-      dockerfile: build/ems-agent/Dockerfile
-      arguments:
-        NETCONF_DIR: ./externals/lte-element-manager/third_party/libnetconf2
-        YANG_DIR: ./externals/lte-element-manager/third_party/libyang
-
-    container_name: EMS-GNB
-    depends_on:
-      - oai-gnb
-    environment:
-      - TERM=xterm-256color
-      - EMS_CONFIG=/app/config/gnb.yaml
-    volumes:
-      - ./config/ems-agent/gnb.yaml:/app/config/gnb.yaml:ro
-      - gnb_metrics:/var/run/gnb-metrics
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - "8303:8303"
-      - "18083:18083"
-    tty: true
-    stdin_open: true
-
   oai-nr-ue:
     image: srsran4g-nms-oai-nr-ue:local
     container_name: 5G-OAI-NR-UE
@@ -131,8 +115,10 @@ services:
     devices:
       - /dev/net/tun:/dev/net/tun
     environment:
+      # The rfsim server address (the gNB) comes from the `rfsimulator`
+      # section of the UE config file.
       USE_ADDITIONAL_OPTIONS: >-
-        -E --rfsim -r 106 --numerology 1 --uicc0.imsi 208990100001100 -C 3319680000 --rfsimulator.serveraddr 10.55.0.20 --log_config.global_log_options level,nocolor,time
+        -E --rfsim -r 106 --numerology 1 --uicc0.imsi 208990100001100 -C 3319680000 --log_config.global_log_options level,nocolor,time
     volumes:
       - ./config/oai5g/nr-ue.yaml:/opt/oai-nr-ue/etc/nr-ue.yaml:ro
     depends_on:
@@ -147,6 +133,30 @@ services:
     networks:
       fiveg:
         ipv4_address: 10.55.0.30
+
+  # --- EMS Agent (gNB) ---
+  ems-gnb:
+    build:
+      context: .
+      dockerfile: build/ems-agent/Dockerfile
+      additional_contexts:
+        third-party: ./externals/lte-element-manager/third_party
+    container_name: EMS-GNB
+    depends_on:
+      oai-gnb:
+        condition: service_healthy
+    environment:
+      - TERM=xterm-256color
+      - EMS_CONFIG=/app/config/gnb.yaml
+    volumes:
+      - ./config/ems-agent/gnb.yaml:/app/config/gnb.yaml:ro
+      - ./config/oai5g:/app/element-config
+      - gnb_metrics:/var/run/gnb-metrics
+    ports:
+      - "8303:8303"
+      - "18083:18083"
+    tty: true
+    stdin_open: true
 
 networks:
   fiveg:

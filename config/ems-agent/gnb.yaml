@@ -1,0 +1,73 @@
+# EMS agent profile for an OAI 5G gNB.
+#
+# Telemetry is produced by the EMS metrics xApp that runs inside the gNB
+# container next to the nearRT-RIC. The xApp aggregates the MAC/RLC/PDCP/GTP
+# and O-RAN E2SM-KPM indications and pushes one NR telemetry envelope per
+# aggregation interval to this unix datagram socket, which is the same
+# transport the srsRAN 4G element uses.
+element:
+  type: gnb
+  socket_path: /var/run/gnb-metrics/gnb_metrics.uds
+  serial: oai-gnb-1
+
+bus:
+  buffer: 200
+
+log:
+  level: info
+  format: console
+  color: true
+  timestamp: true
+
+metrics:
+  snapshot_path: /var/lib/ems/gnb-snapshot.json
+  log_uds_metrics: false
+
+netconf:
+  enabled: true
+  addr: 0.0.0.0:8303
+  transport: ssh
+  snapshot_path: /var/lib/ems/gnb-netconf.json
+  yang_dir: /app/yang
+  ssh:
+    hostkey: /app/netconf/hostkey
+    authorized_key: /app/netconf/authorized_keys
+    username: admin
+
+nrm:
+  subnetwork: srsRAN
+  managed_element: gnb1
+  gnb_function_id: "1"
+
+pm:
+  enabled: true
+  granularity_period: 10s
+  report_period: 10s
+
+fm:
+  tca:
+    enabled: true
+    test_injection_enabled: true
+    rules:
+      s1_interface_down:
+        enabled: true
+        raise_threshold: 1
+        clear_threshold: 1
+        raise_duration: 10s
+        clear_duration: 10s
+      high_bler:
+        enabled: true
+        raise_threshold: 0.10
+        clear_threshold: 0.05
+        raise_duration: 10s
+        clear_duration: 10s
+      low_throughput:
+        enabled: true
+        raise_threshold: 1000000
+        clear_threshold: 1000001
+        raise_duration: 30s
+        clear_duration: 10s
+
+# NR configuration management (E2SM-RC based CM) is not implemented yet.
+control:
+  enabled: false
