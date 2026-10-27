@@ -1,0 +1,58 @@
+# EMS agent profile for an Open5GS 5G Core (o5gc managed element).
+element:
+  type: open5gs
+  socket_path: ""
+
+bus:
+  buffer: 200
+
+log:
+  level: info
+  format: console
+  color: true
+  timestamp: true
+  components:
+    adapter: debug
+    open5gs: debug
+
+metrics:
+  snapshot_path: /var/lib/ems/open5gs-metrics.json
+  log_uds_metrics: false
+
+netconf:
+  enabled: true
+  addr: 0.0.0.0:8304
+  transport: ssh
+  snapshot_path: /var/lib/ems/open5gs-netconf.json
+  yang_dir: /app/yang
+  ssh:
+    hostkey: /app/netconf/hostkey
+    authorized_key: /app/netconf/authorized_keys
+    username: admin
+
+nrm:
+  subnetwork: srsRAN
+  managed_element: o5gc1
+
+pm:
+  enabled: false
+
+fm:
+  tca:
+    enabled: false
+
+control:
+  enabled: false
+
+open5gs:
+  scrape_interval: 5s
+  timeout: 5s
+  nodes:
+    - name: amf
+      url: http://127.0.0.5:9090
+    - name: smf
+      url: http://127.0.0.4:9090
+    - name: upf
+      url: http://127.0.0.7:9090
+    - name: pcf
+      url: http://127.0.0.13:9090

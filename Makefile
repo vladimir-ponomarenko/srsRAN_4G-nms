@@ -1,12 +1,13 @@
 -include .env
 export
 
-.PHONY: help submodules lte-element-manager-clone netconf-client build build-fast build-4g build-4g-fast build-5g build-5g-fast build-oai5g build-open5gs5g build-ems-gnb pull-images pull-images-5g up up-4g up-5g down down-4g down-5g restart restart-4g restart-5g build-ems build-enb build-ems-fast build-enb-fast ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 logs-ems-epc logs-radio-supervisor logs-5g logs-5g-core logs-5g-gnb logs-5g-ue logs-5g-ems-gnb net-check net-check-5g netconf-keys netconf-poll-gnb netconf-poll-gnb-e2 netconf-poll-gnb-ues netconf-poll-gnb-kpis netconf-poll-enb1 netconf-poll-enb2 netconf-poll-enb1-nrm netconf-poll-enb2-nrm netconf-poll-enb1-nrm-cells netconf-poll-enb2-nrm-cells netconf-hold-lock-enb1 netconf-hold-lock-enb2 nbi-edit-enb1-nprb nbi-edit-enb2-nprb tca-inject-enb1 tca-inject-enb2 restart-enb-by-serial restart-radio-pair1 restart-radio-pair2 iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul iperf-5g-dl iperf-5g-ul clean clean-5g distclean
+.PHONY: help submodules lte-element-manager-clone netconf-client build build-fast build-4g build-4g-fast build-5g build-5g-fast build-oai5g build-open5gs5g build-ems-gnb build-ems-o5gc pull-images pull-images-5g up up-4g up-5g down down-4g down-5g restart restart-4g restart-5g build-ems build-enb build-ems-fast build-enb-fast ue1-shell ue2-shell enb1-shell enb2-shell epc-shell ems1-shell ems2-shell logs logs-all logs-epc logs-enb1 logs-enb2 logs-ue1 logs-ue2 logs-ems1 logs-ems2 logs-ems-epc logs-radio-supervisor logs-5g logs-5g-core logs-5g-gnb logs-5g-ue logs-5g-ems-gnb logs-5g-ems-o5gc net-check net-check-5g netconf-keys netconf-poll-gnb netconf-poll-gnb-e2 netconf-poll-gnb-ues netconf-poll-gnb-kpis netconf-poll-open5gs netconf-poll-open5gs-amf netconf-poll-open5gs-smf netconf-poll-open5gs-upf netconf-poll-open5gs-pcf netconf-poll-open5gs-metrics netconf-poll-open5gs-amf-metrics netconf-poll-open5gs-smf-metrics netconf-poll-open5gs-upf-metrics netconf-poll-open5gs-pcf-metrics netconf-poll-open5gs-amf-performance netconf-poll-open5gs-smf-performance netconf-poll-open5gs-upf-performance netconf-poll-open5gs-pcf-performance netconf-poll-open5gs-amf-info netconf-poll-open5gs-smf-info netconf-poll-open5gs-amf-dump netconf-poll-open5gs-smf-dump netconf-poll-enb1 netconf-poll-enb2 netconf-poll-enb1-nrm netconf-poll-enb2-nrm netconf-poll-enb1-nrm-cells netconf-poll-enb2-nrm-cells netconf-hold-lock-enb1 netconf-hold-lock-enb2 nbi-edit-enb1-nprb nbi-edit-enb2-nprb tca-inject-enb1 tca-inject-enb2 restart-enb-by-serial restart-radio-pair1 restart-radio-pair2 iperf-epc-server iperf-ue1-server iperf-ue2-server iperf-ue1-dl iperf-ue1-ul iperf-ue2-dl iperf-ue2-ul iperf-5g-dl iperf-5g-ul clean clean-5g distclean
 
 help:
 	@echo "4G (default): make build && make up"
 	@echo "5G RFSimulator: make build-5g && make up-5g && make net-check-5g"
 	@echo "5G metrics:     make netconf-poll-gnb (or -e2 / -ues / -kpis)"
+	@echo "5GC metrics:     make netconf-poll-open5gs (or -amf / -smf / -upf / -pcf / -metrics / -info / -dump)
 	@echo "Useful 5G targets: logs-5g, logs-5g-core, logs-5g-gnb, logs-5g-ems-gnb, logs-5g-ue, iperf-5g-dl, iperf-5g-ul, down-5g"
 
 POLL_INTERVAL ?= 1
@@ -38,7 +39,7 @@ build-4g: submodules lte-element-manager-clone pull-images
 build-4g-fast: submodules lte-element-manager-clone
 	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose build
 
-build-5g: submodules pull-images-5g build-oai5g build-ems-gnb build-open5gs5g
+build-5g: submodules pull-images-5g build-oai5g build-ems-gnb build-ems-o5gc build-open5gs5g
 
 build-5g-fast: submodules
 	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f docker-compose.5g.yml build open5gs-5gc
@@ -54,6 +55,9 @@ build-oai5g: submodules
 
 build-ems-gnb: submodules
 	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f docker-compose.5g.yml build ems-gnb
+
+build-ems-o5gc: submodules
+	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose -f docker-compose.5g.yml build ems-o5gc
 
 build-ems: submodules lte-element-manager-clone pull-images
 	DOCKER_BUILDKIT=1 COMPOSE_DOCKER_CLI_BUILD=1 docker compose build ems-enb1 ems-enb2
@@ -168,6 +172,9 @@ logs-5g-core:
 logs-5g-gnb:
 	docker compose -f docker-compose.5g.yml logs -f oai-gnb
 
+logs-5g-ems-o5gc:
+	docker compose -f docker-compose.5g.yml logs -f ems-o5gc
+
 logs-5g-ems-gnb:
 	docker compose -f docker-compose.5g.yml exec oai-gnb sh -c 'tail -n 200 -f /var/log/nearRT-RIC.log /var/log/ems-gnb-metrics-xapp.log'
 
@@ -194,6 +201,60 @@ netconf-poll-gnb-ues:
 
 netconf-poll-gnb-kpis:
 	bash build/scripts/gnb_metrics_poll.sh 127.0.0.1 8303 kpis $(POLL_INTERVAL)
+
+netconf-poll-open5gs:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 all 0
+
+netconf-poll-open5gs-amf:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 amf 0
+
+netconf-poll-open5gs-smf:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 smf 0
+
+netconf-poll-open5gs-upf:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 upf 0
+
+netconf-poll-open5gs-pcf:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 pcf 0
+
+netconf-poll-open5gs-metrics:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 amf-metrics 0
+
+netconf-poll-open5gs-amf-metrics:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 amf-metrics 0
+
+netconf-poll-open5gs-smf-metrics:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 smf-metrics 0
+
+netconf-poll-open5gs-upf-metrics:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 upf-metrics 0
+
+netconf-poll-open5gs-pcf-metrics:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 pcf-metrics 0
+
+netconf-poll-open5gs-amf-performance:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 amf-performance 0
+
+netconf-poll-open5gs-smf-performance:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 smf-performance 0
+
+netconf-poll-open5gs-upf-performance:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 upf-performance 0
+
+netconf-poll-open5gs-pcf-performance:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 pcf-performance 0
+
+netconf-poll-open5gs-amf-info:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 amf-info 0
+
+netconf-poll-open5gs-smf-info:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 smf-info 0
+
+netconf-poll-open5gs-amf-dump:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 amf-dump 0
+
+netconf-poll-open5gs-smf-dump:
+	bash build/scripts/open5gs_metrics_poll.sh 127.0.0.1 8304 smf-dump 0
 
 netconf-poll-enb1:
 	NETCONF_EMS_CONTAINER=EMS-ENB-1 bash build/scripts/netconf_poll.sh 127.0.0.1 8301 $(POLL_INTERVAL) get

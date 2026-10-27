@@ -28,6 +28,8 @@ services:
       - /dev/net/tun:/dev/net/tun
     sysctls:
       - net.ipv4.ip_forward=1
+    ports:
+      - "8304:8304"
     environment:
       - OPEN5GS_CONFIG=/etc/open5gs/open5gs-5gc.yaml
       - OPEN5GS_MONGO_HOST=mongo-5g
@@ -74,8 +76,15 @@ services:
   oai-gnb:
     image: srsran4g-nms-oai-gnb:local
     container_name: 5G-OAI-GNB
+    privileged: true
+    pids_limit: -1
     cap_add:
       - SYS_NICE
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 65535
+        hard: 65535
     environment:
       USE_ADDITIONAL_OPTIONS: >-
         -E --rfsim --log_config.global_log_options level,nocolor,time
@@ -155,6 +164,32 @@ services:
     ports:
       - "8303:8303"
       - "18083:18083"
+    tty: true
+    stdin_open: true
+
+  # --- EMS Agent (Open5GS 5G Core) ---
+  #
+  # Runs inside the 5G-OPEN5GS network namespace so it can scrape the network
+  # functions over loopback (each binds its Prometheus /metrics and JSON
+  # infoAPI to 127.0.0.x:9090). The NETCONF server it starts on :8304 is
+  # published to the host by the open5gs-5gc service.
+  ems-o5gc:
+    build:
+      context: .
+      dockerfile: build/ems-agent/Dockerfile
+      additional_contexts:
+        third-party: ./externals/lte-element-manager/third_party
+    image: srsran4g-nms-ems-o5gc:local
+    container_name: EMS-O5GC
+    network_mode: service:open5gs-5gc
+    depends_on:
+      open5gs-5gc:
+        condition: service_healthy
+    environment:
+      - TERM=xterm-256color
+      - EMS_CONFIG=/app/config/open5gs.yaml
+    volumes:
+      - ./config/ems-agent-open5gs.yaml:/app/config/open5gs.yaml:ro
     tty: true
     stdin_open: true
 
