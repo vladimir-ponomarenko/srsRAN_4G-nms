@@ -612,8 +612,9 @@ static bool subscribe_node(e2_node_connected_xapp_t *n)
 
 static void write_harq(ems_json_writer_t *w, const char *key, const uint32_t *harq)
 {
-  ems_json_printf(w, "%Q: [%d, %d, %d, %d, %d]",
-                  key, harq[0], harq[1], harq[2], harq[3], harq[4]);
+  ems_json_printf(w, "%Q: [%u, %u, %u, %u, %u]",
+                  key, (unsigned)harq[0], (unsigned)harq[1], (unsigned)harq[2],
+                  (unsigned)harq[3], (unsigned)harq[4]);
 }
 
 static double bitrate_per_second(uint64_t cur, uint64_t prev, double dt_s)
@@ -654,42 +655,42 @@ static void write_rlc_container(ems_json_writer_t *w, ems_drb_t *d, double dt_s)
   // site can ever place (or forget) one by hand.
   ems_json_printf(w,
       "rlc_container: {"
-      "txpdu_pkts: %d, txpdu_bytes: %llu, txpdu_wt_ms: %d, "
-      "txpdu_dd_pkts: %d, txpdu_dd_bytes: %d, "
-      "txpdu_retx_pkts: %d, txpdu_retx_bytes: %d, "
-      "txpdu_segmented: %d, "
-      "txpdu_status_pkts: %d, txpdu_status_bytes: %d, "
-      "txbuf_occ_bytes: %d, txbuf_occ_pkts: %d, "
-      "rxpdu_pkts: %d, rxpdu_bytes: %llu, "
-      "rxpdu_dup_pkts: %d, rxpdu_dup_bytes: %d, "
-      "rxpdu_dd_pkts: %d, rxpdu_dd_bytes: %d, "
-      "rxpdu_ow_pkts: %d, rxpdu_ow_bytes: %d, "
-      "rxpdu_status_pkts: %d, rxpdu_status_bytes: %d, "
-      "rxbuf_occ_bytes: %d, rxbuf_occ_pkts: %d, "
-      "txsdu_pkts: %d, txsdu_bytes: %llu, "
-      "txsdu_avg_time_to_tx: %.6f, txsdu_wt_us: %d, "
-      "rxsdu_pkts: %d, rxsdu_bytes: %llu, "
-      "rxsdu_dd_pkts: %d, rxsdu_dd_bytes: %d, "
-      "mode: %d, "
+      "txpdu_pkts: %u, txpdu_bytes: %llu, txpdu_wt_ms: %u, "
+      "txpdu_dd_pkts: %u, txpdu_dd_bytes: %u, "
+      "txpdu_retx_pkts: %u, txpdu_retx_bytes: %u, "
+      "txpdu_segmented: %u, "
+      "txpdu_status_pkts: %u, txpdu_status_bytes: %u, "
+      "txbuf_occ_bytes: %u, txbuf_occ_pkts: %u, "
+      "rxpdu_pkts: %u, rxpdu_bytes: %llu, "
+      "rxpdu_dup_pkts: %u, rxpdu_dup_bytes: %u, "
+      "rxpdu_dd_pkts: %u, rxpdu_dd_bytes: %u, "
+      "rxpdu_ow_pkts: %u, rxpdu_ow_bytes: %u, "
+      "rxpdu_status_pkts: %u, rxpdu_status_bytes: %u, "
+      "rxbuf_occ_bytes: %u, rxbuf_occ_pkts: %u, "
+      "txsdu_pkts: %u, txsdu_bytes: %llu, "
+      "txsdu_avg_time_to_tx: %.6f, txsdu_wt_us: %u, "
+      "rxsdu_pkts: %u, rxsdu_bytes: %llu, "
+      "rxsdu_dd_pkts: %u, rxsdu_dd_bytes: %u, "
+      "mode: %u, "
       "tx_bitrate: %.6f, rx_bitrate: %.6f"
       "}",
-      s->txpdu_pkts, (unsigned long long)s->txpdu_bytes, s->txpdu_wt_ms,
-      s->txpdu_dd_pkts, s->txpdu_dd_bytes,
-      s->txpdu_retx_pkts, s->txpdu_retx_bytes,
-      s->txpdu_segmented,
-      s->txpdu_status_pkts, s->txpdu_status_bytes,
-      s->txbuf_occ_bytes, s->txbuf_occ_pkts,
-      s->rxpdu_pkts, (unsigned long long)s->rxpdu_bytes,
-      s->rxpdu_dup_pkts, s->rxpdu_dup_bytes,
-      s->rxpdu_dd_pkts, s->rxpdu_dd_bytes,
-      s->rxpdu_ow_pkts, s->rxpdu_ow_bytes,
-      s->rxpdu_status_pkts, s->rxpdu_status_bytes,
-      s->rxbuf_occ_bytes, s->rxbuf_occ_pkts,
-      s->txsdu_pkts, (unsigned long long)s->txsdu_bytes,
-      finite_or_zero(s->txsdu_avg_time_to_tx), s->txsdu_wt_us,
-      s->rxsdu_pkts, (unsigned long long)s->rxsdu_bytes,
-      s->rxsdu_dd_pkts, s->rxsdu_dd_bytes,
-      s->mode,
+      (unsigned)s->txpdu_pkts, (unsigned long long)s->txpdu_bytes, (unsigned)s->txpdu_wt_ms,
+      (unsigned)s->txpdu_dd_pkts, (unsigned)s->txpdu_dd_bytes,
+      (unsigned)s->txpdu_retx_pkts, (unsigned)s->txpdu_retx_bytes,
+      (unsigned)s->txpdu_segmented,
+      (unsigned)s->txpdu_status_pkts, (unsigned)s->txpdu_status_bytes,
+      (unsigned)s->txbuf_occ_bytes, (unsigned)s->txbuf_occ_pkts,
+      (unsigned)s->rxpdu_pkts, (unsigned long long)s->rxpdu_bytes,
+      (unsigned)s->rxpdu_dup_pkts, (unsigned)s->rxpdu_dup_bytes,
+      (unsigned)s->rxpdu_dd_pkts, (unsigned)s->rxpdu_dd_bytes,
+      (unsigned)s->rxpdu_ow_pkts, (unsigned)s->rxpdu_ow_bytes,
+      (unsigned)s->rxpdu_status_pkts, (unsigned)s->rxpdu_status_bytes,
+      (unsigned)s->rxbuf_occ_bytes, (unsigned)s->rxbuf_occ_pkts,
+      (unsigned)s->txsdu_pkts, (unsigned long long)s->txsdu_bytes,
+      finite_or_zero(s->txsdu_avg_time_to_tx), (unsigned)s->txsdu_wt_us,
+      (unsigned)s->rxsdu_pkts, (unsigned long long)s->rxsdu_bytes,
+      (unsigned)s->rxsdu_dd_pkts, (unsigned)s->rxsdu_dd_bytes,
+      (unsigned)s->mode,
       finite_or_zero(d->rlc_tx_bitrate), finite_or_zero(d->rlc_rx_bitrate));
 }
 
@@ -703,24 +704,24 @@ static void write_pdcp_container(ems_json_writer_t *w, ems_drb_t *d, double dt_s
 
   ems_json_printf(w,
       "pdcp_container: {"
-      "txpdu_pkts: %d, txpdu_bytes: %llu, txpdu_sn: %d, "
-      "rxpdu_pkts: %d, rxpdu_bytes: %llu, rxpdu_sn: %d, "
-      "rxpdu_oo_pkts: %d, rxpdu_oo_bytes: %d, "
-      "rxpdu_dd_pkts: %d, rxpdu_dd_bytes: %d, "
-      "rxpdu_ro_count: %d, "
-      "txsdu_pkts: %d, txsdu_bytes: %llu, "
-      "rxsdu_pkts: %d, rxsdu_bytes: %llu, "
-      "mode: %d, "
+      "txpdu_pkts: %u, txpdu_bytes: %llu, txpdu_sn: %u, "
+      "rxpdu_pkts: %u, rxpdu_bytes: %llu, rxpdu_sn: %u, "
+      "rxpdu_oo_pkts: %u, rxpdu_oo_bytes: %u, "
+      "rxpdu_dd_pkts: %u, rxpdu_dd_bytes: %u, "
+      "rxpdu_ro_count: %u, "
+      "txsdu_pkts: %u, txsdu_bytes: %llu, "
+      "rxsdu_pkts: %u, rxsdu_bytes: %llu, "
+      "mode: %u, "
       "tx_bitrate: %.6f, rx_bitrate: %.6f"
       "}",
-      s->txpdu_pkts, (unsigned long long)s->txpdu_bytes, s->txpdu_sn,
-      s->rxpdu_pkts, (unsigned long long)s->rxpdu_bytes, s->rxpdu_sn,
-      s->rxpdu_oo_pkts, s->rxpdu_oo_bytes,
-      s->rxpdu_dd_pkts, s->rxpdu_dd_bytes,
-      s->rxpdu_ro_count,
-      s->txsdu_pkts, (unsigned long long)s->txsdu_bytes,
-      s->rxsdu_pkts, (unsigned long long)s->rxsdu_bytes,
-      s->mode,
+      (unsigned)s->txpdu_pkts, (unsigned long long)s->txpdu_bytes, (unsigned)s->txpdu_sn,
+      (unsigned)s->rxpdu_pkts, (unsigned long long)s->rxpdu_bytes, (unsigned)s->rxpdu_sn,
+      (unsigned)s->rxpdu_oo_pkts, (unsigned)s->rxpdu_oo_bytes,
+      (unsigned)s->rxpdu_dd_pkts, (unsigned)s->rxpdu_dd_bytes,
+      (unsigned)s->rxpdu_ro_count,
+      (unsigned)s->txsdu_pkts, (unsigned long long)s->txsdu_bytes,
+      (unsigned)s->rxsdu_pkts, (unsigned long long)s->rxsdu_bytes,
+      (unsigned)s->mode,
       finite_or_zero(d->pdcp_tx_bitrate), finite_or_zero(d->pdcp_rx_bitrate));
 }
 
@@ -738,7 +739,7 @@ static void write_drb_list(ems_json_writer_t *w, ems_ue_t *ue, double dt_s)
       ems_json_printf(w, ", ");
     first = false;
 
-    ems_json_printf(w, "{drb_id: %d", d->rbid);
+    ems_json_printf(w, "{drb_id: %u", (unsigned)d->rbid);
     if (d->rlc_valid) {
       ems_json_printf(w, ", ");
       write_rlc_container(w, d, dt_s);
@@ -749,8 +750,8 @@ static void write_drb_list(ems_json_writer_t *w, ems_ue_t *ue, double dt_s)
     }
     if (ue->gtp_valid) {
       ems_json_printf(w,
-          ", gtp_container: {teidgnb: %d, teidupf: %d, qfi: %d}",
-          ue->gtp.teidgnb, ue->gtp.teidupf, ue->gtp.qfi);
+          ", gtp_container: {teidgnb: %u, teidupf: %u, qfi: %u}",
+          (unsigned)ue->gtp.teidgnb, (unsigned)ue->gtp.teidupf, (unsigned)ue->gtp.qfi);
     }
     ems_json_printf(w, "}");
   }
@@ -779,7 +780,7 @@ static void write_ue(ems_json_writer_t *w, ems_ue_t *ue, double dt_s)
   else
     ran_ue_id[0] = '\0';
 
-  ems_json_printf(w, "{ue_rnti: %d, ran_ue_id: %Q", ue->rnti, ran_ue_id);
+  ems_json_printf(w, "{ue_rnti: %u, ran_ue_id: %Q", (unsigned)ue->rnti, ran_ue_id);
 
   if (ue->mac_valid) {
     mac_ue_stats_impl_t const *m = &ue->mac;
@@ -796,32 +797,33 @@ static void write_ue(ems_json_writer_t *w, ems_ue_t *ue, double dt_s)
         "dl_bitrate: %.6f, ul_bitrate: %.6f, "
         "dl_bler: %.6f, ul_bler: %.6f, "
         "pusch_snr: %.6f, pucch_snr: %.6f, "
-        "dl_mcs: %d, ul_mcs: %d, dl_mcs2: %d, ul_mcs2: %d, "
-        "wb_cqi: %d, ul_phr: %d, ul_bsr: %d, "
-        "dl_sched_rb: %d, ul_sched_rb: %d, "
-        "dl_aggr_prb: %d, ul_aggr_prb: %d, "
-        "dl_aggr_retx_prb: %d, ul_aggr_retx_prb: %d, "
-        "dl_aggr_sdus: %d, ul_aggr_sdus: %d, "
+        "dl_mcs: %u, ul_mcs: %u, dl_mcs2: %u, ul_mcs2: %u, "
+        "wb_cqi: %u, ul_phr: %d, ul_bsr: %u, "
+        "dl_sched_rb: %u, ul_sched_rb: %u, "
+        "dl_aggr_prb: %u, ul_aggr_prb: %u, "
+        "dl_aggr_retx_prb: %u, ul_aggr_retx_prb: %u, "
+        "dl_aggr_sdus: %u, ul_aggr_sdus: %u, "
         "dl_aggr_bytes: %llu, ul_aggr_bytes: %llu, "
         "dl_aggr_tbs: %llu, ul_aggr_tbs: %llu, "
         "dl_curr_tbs: %llu, ul_curr_tbs: %llu, "
-        "frame: %d, slot: %d, "
-        "dl_num_harq: %d, ul_num_harq: %d, ",
+        "frame: %u, slot: %u, "
+        "dl_num_harq: %u, ul_num_harq: %u, ",
         finite_or_zero(ue->dl_bitrate), finite_or_zero(ue->ul_bitrate),
         finite_or_zero((double)m->dl_bler), finite_or_zero((double)m->ul_bler),
         finite_or_zero((double)m->pusch_snr), finite_or_zero((double)m->pucch_snr),
-        m->dl_mcs1, m->ul_mcs1, m->dl_mcs2, m->ul_mcs2,
-        m->wb_cqi, (int)m->phr, m->bsr,
-        (int)m->dl_sched_rb, (int)m->ul_sched_rb,
-        m->dl_aggr_prb, m->ul_aggr_prb,
-        m->dl_aggr_retx_prb, m->ul_aggr_retx_prb,
-        m->dl_aggr_sdus, m->ul_aggr_sdus,
+        (unsigned)m->dl_mcs1, (unsigned)m->ul_mcs1,
+        (unsigned)m->dl_mcs2, (unsigned)m->ul_mcs2,
+        (unsigned)m->wb_cqi, (int)m->phr, (unsigned)m->bsr,
+        (unsigned)m->dl_sched_rb, (unsigned)m->ul_sched_rb,
+        (unsigned)m->dl_aggr_prb, (unsigned)m->ul_aggr_prb,
+        (unsigned)m->dl_aggr_retx_prb, (unsigned)m->ul_aggr_retx_prb,
+        (unsigned)m->dl_aggr_sdus, (unsigned)m->ul_aggr_sdus,
         (unsigned long long)m->dl_aggr_bytes_sdus,
         (unsigned long long)m->ul_aggr_bytes_sdus,
         (unsigned long long)m->dl_aggr_tbs, (unsigned long long)m->ul_aggr_tbs,
         (unsigned long long)m->dl_curr_tbs, (unsigned long long)m->ul_curr_tbs,
-        m->frame, m->slot,
-        m->dl_num_harq, m->ul_num_harq);
+        (unsigned)m->frame, (unsigned)m->slot,
+        (unsigned)m->dl_num_harq, (unsigned)m->ul_num_harq);
     write_harq(w, "dl_harq", m->dl_harq);
     ems_json_printf(w, ", ");
     write_harq(w, "ul_harq", m->ul_harq);
@@ -885,18 +887,18 @@ static void *export_loop(void *arg)
                     g_cfg.gnb_serial);
 
     ems_json_printf(&w,
-        ", e2_container: {e2_status: %Q, e2_status_code: %d, "
+        ", e2_container: {e2_status: %Q, e2_status_code: %u, "
         "near_ric_addr: %Q, e2ap_version: %Q, kpm_version: %Q, ran_function_list: [",
-        e2_ok ? "connected" : "not_ready", e2_ok ? 1 : 0,
+        e2_ok ? "connected" : "not_ready", (unsigned)(e2_ok ? 1 : 0),
         g_model.near_ric_addr, EMS_E2AP_VERSION, EMS_KPM_VERSION);
     for (size_t i = 0; i < g_model.ran_function_len; ++i)
-      ems_json_printf(&w, "%s{id: %d, name: %Q}", i ? ", " : "",
-                      g_model.ran_function[i].id, g_model.ran_function[i].name);
+      ems_json_printf(&w, "%s{id: %u, name: %Q}", i ? ", " : "",
+                      (unsigned)g_model.ran_function[i].id, g_model.ran_function[i].name);
     ems_json_printf(&w, "]}");
 
     ems_json_printf(&w,
-        ", ngap_container: {ngap_status: %Q, ngap_status_code: %d}",
-        ngap_ok ? "connected" : "not_ready", ngap_ok ? 1 : 0);
+        ", ngap_container: {ngap_status: %Q, ngap_status_code: %u}",
+        ngap_ok ? "connected" : "not_ready", (unsigned)(ngap_ok ? 1 : 0));
 
     uint32_t total_ues = 0;
     uint32_t connected_ues = 0;
@@ -908,12 +910,12 @@ static void *export_loop(void *arg)
         ++connected_ues;
     }
     ems_json_printf(&w,
-        ", rrc_container: {rrc_total_ues: %d, rrc_connected_ues: %d}",
-        total_ues, connected_ues);
+        ", rrc_container: {rrc_total_ues: %u, rrc_connected_ues: %u}",
+        (unsigned)total_ues, (unsigned)connected_ues);
 
     ems_json_printf(&w,
-        ", cell_list: [{nr_cell_id: %Q, nci: %Q, pci: %d, ue_list: [",
-        g_cfg.cell_id, g_cfg.cell_id, g_cfg.pci);
+        ", cell_list: [{nr_cell_id: %Q, nci: %Q, pci: %u, ue_list: [",
+        g_cfg.cell_id, g_cfg.cell_id, (unsigned)g_cfg.pci);
     bool first = true;
     for (size_t i = 0; i < EMS_MAX_UE; ++i) {
       ems_ue_t *ue = &g_model.ue[i];
