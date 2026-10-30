@@ -176,6 +176,7 @@ logs-5g-ems-o5gc:
 	docker compose -f docker-compose.5g.yml logs -f ems-o5gc
 
 logs-5g-ems-gnb:
+	docker compose -f docker-compose.5g.yml logs -f ems-gnb & \
 	docker compose -f docker-compose.5g.yml exec oai-gnb sh -c 'tail -n 200 -f /var/log/nearRT-RIC.log /var/log/ems-gnb-metrics-xapp.log'
 
 logs-5g-ue:
