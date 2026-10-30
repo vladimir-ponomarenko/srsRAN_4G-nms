@@ -64,9 +64,14 @@ case "${mode}" in
   smf-info)               rpc_xpath="${me}/*[local-name()='SmfFunction']/*[local-name()='info']" ;;
   amf-dump)               rpc_xpath="${me}/*[local-name()='AmfFunction']/*[local-name()='info']/*[local-name()='dump']/*[local-name()='endpoint']" ;;
   smf-dump)               rpc_xpath="${me}/*[local-name()='SmfFunction']/*[local-name()='info']/*[local-name()='dump']/*[local-name()='endpoint']" ;;
+  amf-alarms)             rpc_xpath="${me}/*[local-name()='AmfFunction']/*[local-name()='fault_management']/*[local-name()='active_alarm']" ;;
+  smf-alarms)             rpc_xpath="${me}/*[local-name()='SmfFunction']/*[local-name()='fault_management']/*[local-name()='active_alarm']" ;;
+  upf-alarms)             rpc_xpath="${me}/*[local-name()='UpfFunction']/*[local-name()='fault_management']/*[local-name()='active_alarm']" ;;
+  pcf-alarms)             rpc_xpath="${me}/*[local-name()='PCFFunction']/*[local-name()='fault_management']/*[local-name()='active_alarm']" ;;
+  alarms)                 rpc_xpath="${me}/*/*[local-name()='fault_management']/*[local-name()='active_alarm']" ;;
   *)
     echo "unknown mode: ${mode}" >&2
-    echo "valid: all nrm functions amf smf upf pcf <nf>[-metrics|-performance|-info|-dump]" >&2
+    echo "valid: all nrm functions amf smf upf pcf <nf>[-metrics|-performance|-info|-dump|-alarms] alarms" >&2
     exit 2
     ;;
 esac

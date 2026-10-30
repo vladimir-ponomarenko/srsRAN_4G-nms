@@ -40,6 +40,198 @@ pm:
 fm:
   tca:
     enabled: false
+  open5gs:
+    enabled: true
+    # POST /inject is the SYNTHETIC demo endpoint
+    # used ONLY by oai_alarms/synthetic.sh to force a metric view for alarms.
+    test_injection_enabled: true
+    test_injection_addr: 0.0.0.0:18084
+    rules:
+      # 1. AMF Registration & Access.
+      amf_reg_init_fail:
+        enabled: true
+        threshold: 0.98
+        hysteresis: 0.01
+        window_seconds: 30
+        severity: MAJOR
+      amf_reg_mob_fail:
+        enabled: true
+        threshold: 0.95
+        hysteresis: 0.02
+        window_seconds: 30
+        severity: MAJOR
+      amf_reg_period_fail:
+        enabled: true
+        threshold: 0.90
+        hysteresis: 0.05
+        window_seconds: 30
+        severity: MINOR
+      amf_reg_emerg_fail:
+        enabled: true
+        threshold: 0.95
+        hysteresis: 0.02
+        window_seconds: 30
+        severity: MAJOR
+      amf_auth_reject_rate:
+        enabled: true
+        threshold: 0.99
+        hysteresis: 0.005
+        window_seconds: 30
+        severity: MAJOR
+      amf_paging_fail_rate:
+        enabled: true
+        threshold: 0.90
+        hysteresis: 0.05
+        window_seconds: 30
+        severity: WARNING
+      amf_conf_update_fail:
+        enabled: false   # 0/1 counter noise with a single UE -> false positive
+        threshold: 0.50
+        hysteresis: 0.99
+        window_seconds: 30
+        severity: MINOR
+      amf_ran_ue_capacity:
+        enabled: true
+        threshold: 800        # high count; trips only under real user load
+        hysteresis: 80
+        window_seconds: 30
+        severity: WARNING
+      amf_gnb_count_dropped:
+        enabled: true
+        threshold: 1
+        hysteresis: 0
+        window_seconds: 10
+        severity: CRITICAL
+      # 2. SMF & UPF Session Management.
+      smf_n4_sess_estab_fail:
+        enabled: true
+        threshold: 0.97
+        hysteresis: 0.01
+        window_seconds: 30
+        severity: MAJOR
+      upf_n4_sess_estab_fail:
+        enabled: true
+        threshold: 0.97
+        hysteresis: 0.01
+        window_seconds: 30
+        severity: MAJOR
+      smf_n4_report_fail:
+        enabled: true
+        threshold: 0.97
+        hysteresis: 0.01
+        window_seconds: 30
+        severity: MAJOR
+      smf_active_bearer_limit:
+        enabled: true
+        threshold: 800
+        hysteresis: 80
+        window_seconds: 30
+        severity: WARNING
+      upf_session_capacity:
+        enabled: true
+        threshold: 800
+        hysteresis: 80
+        window_seconds: 30
+        severity: WARNING
+      smf_pfcp_peer_loss:
+        enabled: true
+        threshold: 1
+        hysteresis: 0
+        window_seconds: 10
+        severity: CRITICAL
+      # 3. Protocol & Interworking Errors (absolute counter > 0 in window).
+      smf_gtpv1c_parse_error:
+        enabled: true
+        threshold: 0
+        hysteresis: 0
+        window_seconds: 30
+        severity: MINOR
+      smf_gtpv2c_parse_error:
+        enabled: true
+        threshold: 0
+        hysteresis: 0
+        window_seconds: 30
+        severity: MINOR
+      smf_gtp_new_node_failed:
+        enabled: true
+        threshold: 0
+        hysteresis: 0
+        window_seconds: 30
+        severity: MINOR
+      # 4. Platform & Resource Exhaustion (all NFs, raise when above threshold).
+      nf_fd_exhaustion_warn:
+        enabled: true
+        threshold: 0.80
+        hysteresis: 0.15
+        window_seconds: 30
+        severity: WARNING
+      nf_fd_exhaustion_crit:
+        enabled: true
+        threshold: 0.95
+        hysteresis: 0.10
+        window_seconds: 30
+        severity: CRITICAL
+      nf_memory_leak_detect:
+        enabled: true
+        threshold: 805306368   # 768 MiB resident bytes
+        hysteresis: 268435456   # 256 MiB recovery band
+        window_seconds: 30
+        severity: MAJOR
+      nf_cpu_saturation:
+        enabled: true
+        threshold: 0.90
+        hysteresis: 0.15
+        window_seconds: 30
+        severity: MAJOR
+      nf_unexpected_restart:
+        enabled: true
+        threshold: 0
+        hysteresis: 0
+        window_seconds: 30
+        severity: MAJOR
+      # 5. State & Diagnostics.
+      ngap_sctp_assoc_down:
+        enabled: true
+        threshold: 1
+        hysteresis: 0
+        window_seconds: 10
+        severity: CRITICAL
+      amf_zero_connected_ues:
+        enabled: true
+        threshold: 1
+        hysteresis: 0
+        window_seconds: 15
+        severity: WARNING
+      smf_zero_active_ues:
+        enabled: true
+        threshold: 1
+        hysteresis: 0
+        window_seconds: 15
+        severity: WARNING
+      upf_n3_data_stagnation:
+        enabled: true
+        threshold: 0
+        hysteresis: 0
+        window_seconds: 30
+        severity: MAJOR
+      nf_unreachable:
+        enabled: true
+        threshold: 1
+        hysteresis: 0
+        window_seconds: 10
+        severity: CRITICAL
+      pdu_session_failure:
+        enabled: true
+        threshold: 0.97
+        hysteresis: 0.01
+        window_seconds: 30
+        severity: MAJOR
+      policy_association_failure:
+        enabled: true
+        threshold: 0.98
+        hysteresis: 0.01
+        window_seconds: 30
+        severity: MAJOR
 
 control:
   enabled: false
